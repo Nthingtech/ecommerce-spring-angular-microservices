@@ -98,6 +98,8 @@ For the **first Product Service implementation**, I recommend starting with thes
 ### **Spring Initializr Command:**
 ```bash
 curl https://start.spring.io/starter.zip \
+  -d type=maven-project \
+  -d language=java \
   -d dependencies=web,data-jpa,validation,postgresql,actuator \
   -d groupId=com.loiane.ecommerce \
   -d artifactId=product-service \
