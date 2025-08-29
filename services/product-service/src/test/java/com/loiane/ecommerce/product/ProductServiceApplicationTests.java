@@ -8,6 +8,7 @@ class ProductServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// This test checks if the Spring application context loads successfully
 	}
 
 }
