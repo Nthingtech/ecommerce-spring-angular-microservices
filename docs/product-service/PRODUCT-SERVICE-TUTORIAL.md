@@ -1281,3 +1281,242 @@ private CategoryRepository categoryRepository;
 - **REST API Endpoints**: Create ProductController and CategoryController
 - **API Documentation**: Add OpenAPI/Swagger documentation
 - **Integration Tests**: Add full request-response testing
+
+---
+
+## **Step 8: Test Data Factory Implementation (✅ COMPLETED)**
+
+### **Test Data Factory Pattern Implementation**
+Successfully implemented comprehensive test data factories to eliminate repetitive test setup and improve maintainability.
+
+#### **Test Results**
+- ✅ **62 total tests passing** (all existing functionality maintained)
+- ✅ **Zero test failures** after factory implementation
+- ✅ **Complete factory coverage** for Product and Category entities
+- ✅ **Comprehensive scenarios** for complex test setups
+
+### **Factory Classes Created**
+
+#### **TestDataFactory (Base Class)**
+File: `/services/product-service/src/test/java/com/loiane/ecommerce/product/factory/TestDataFactory.java`
+
+**Purpose**: Common utilities for all test factories
+```java
+public abstract class TestDataFactory {
+    private static final AtomicInteger counter = new AtomicInteger(0);
+    
+    protected static int nextInt() { return counter.incrementAndGet(); }
+    protected static String nextString(String prefix) { return prefix + "-" + nextInt(); }
+    public static void resetCounter() { counter.set(0); }
+}
+```
+
+**Key Features**:
+- **Unique Value Generation**: Atomic counter ensures unique test data
+- **Prefix Support**: Generate unique strings with meaningful prefixes  
+- **Test Isolation**: Counter reset capability for clean test state
+
+#### **ProductTestDataFactory**
+File: `/services/product-service/src/test/java/com/loiane/ecommerce/product/factory/ProductTestDataFactory.java`
+
+**Static Factory Methods**:
+```java
+Product default = ProductTestDataFactory.createDefault();
+Product laptop = ProductTestDataFactory.createWithPrice("1299.99");
+Product lowStock = ProductTestDataFactory.createWithLowStock();
+Product outOfStock = ProductTestDataFactory.createOutOfStock();
+```
+
+**Fluent Builder Pattern**:
+```java
+Product laptop = ProductTestDataFactory.aProduct()
+    .withName("Gaming Laptop")
+    .withPrice("1599.99")
+    .withStock(25)
+    .thatIsActive()
+    .build();
+```
+
+**Named Product Templates**:
+```java
+Product laptop = ProductTestDataFactory.Products.laptop();
+Product smartphone = ProductTestDataFactory.Products.smartphone();
+Product tshirt = ProductTestDataFactory.Products.tshirt();
+```
+
+#### **CategoryTestDataFactory**
+File: `/services/product-service/src/test/java/com/loiane/ecommerce/product/factory/CategoryTestDataFactory.java`
+
+**Hierarchy Creation**:
+```java
+Category root = CategoryTestDataFactory.createRoot("Electronics");
+Category child = CategoryTestDataFactory.createChild("Computers", root);
+CategoryHierarchy hierarchy = CategoryTestDataFactory.createHierarchy();
+```
+
+**Fluent Builder**:
+```java
+Category category = CategoryTestDataFactory.aCategory()
+    .withName("Smartphones")
+    .withSlug("smartphones")
+    .withParent(electronics)
+    .thatIsActive()
+    .build();
+```
+
+**Tree Structure Support**:
+- **Automatic Level Calculation**: Parent-child relationships with level assignment
+- **Hierarchy Navigation**: Find categories by name in complex trees
+- **Slug Generation**: Automatic URL-friendly slug creation
+
+#### **TestScenarios**
+File: `/services/product-service/src/test/java/com/loiane/ecommerce/product/factory/TestScenarios.java`
+
+**Complete E-commerce Catalog**:
+```java
+EcommerceScenario scenario = TestScenarios.createBasicEcommerceCatalog();
+assertThat(scenario.getCategories()).hasSize(3);
+assertThat(scenario.getProducts()).hasSize(5);
+assertThat(scenario.getActiveProducts()).hasSize(4);
+assertThat(scenario.getLowStockProducts()).hasSize(2);
+```
+
+**Inventory Test Scenarios**:
+```java
+InventoryScenario inventory = TestScenarios.createInventoryTestScenario();
+Product highStock = inventory.getHighStockProduct();      // 1000 units
+Product lowStock = inventory.getLowStockProduct();        // Below threshold
+Product outOfStock = inventory.getOutOfStockProduct();    // 0 units
+Product reserved = inventory.getProductWithReservations(); // 90% reserved
+```
+
+**Price Range Testing**:
+```java
+PriceRangeScenario prices = TestScenarios.createPriceRangeScenario();
+assertThat(prices.getBudgetProducts()).hasSize(3);    // < $50
+assertThat(prices.getMidRangeProducts()).hasSize(3);  // $50-$200  
+assertThat(prices.getPremiumProducts()).hasSize(3);   // > $200
+```
+
+### **Usage Examples and Benefits**
+
+#### **Before: Manual Test Data Setup**
+```java
+// Verbose, repetitive, hard to maintain
+Category category = Category.builder()
+    .id(UUID.randomUUID().toString())
+    .name("Electronics")
+    .slug("electronics")
+    .description("Electronic products")
+    .level(0)
+    .displayOrder(1)
+    .isActive(true)
+    .createdAt(OffsetDateTime.now())
+    .updatedAt(OffsetDateTime.now())
+    .build();
+
+Product product = Product.builder()
+    .id(UUID.randomUUID().toString())
+    .name("Gaming Laptop")
+    .description("High-performance gaming laptop")
+    .shortDescription("Gaming laptop")
+    .sku("LAPTOP-001")
+    .basePrice(new BigDecimal("1299.99"))
+    .stockQuantity(50)
+    .reservedQuantity(0)
+    .trackInventory(true)
+    .lowStockThreshold(5)
+    .status(ProductStatus.ACTIVE)
+    .category(category)
+    .createdAt(OffsetDateTime.now())
+    .updatedAt(OffsetDateTime.now())
+    .build();
+```
+
+#### **After: Test Data Factory Usage**
+```java
+// Clean, expressive, maintainable
+Product laptop = ProductTestDataFactory.aProduct()
+    .withName("Gaming Laptop")
+    .withPrice("1299.99")
+    .withCategory(CategoryTestDataFactory.Categories.electronics())
+    .thatIsActive()
+    .build();
+
+// Or even simpler for common scenarios
+Product laptop = ProductTestDataFactory.Products.laptop();
+```
+
+### **Factory Pattern Benefits Achieved**
+
+#### **1. DRY (Don't Repeat Yourself)**
+- **No More Duplication**: Common test data setup in one place
+- **Consistent Defaults**: All products have valid, consistent default values
+- **Shared Logic**: Validation rules and business logic centralized
+
+#### **2. Maintainable Test Suite**
+- **Single Point of Change**: Update test data in one place
+- **Breaking Change Resilience**: Adding required fields won't break dozens of tests
+- **Easy Schema Evolution**: Factory adapts to entity changes
+
+#### **3. Expressive and Readable Tests**
+- **Intent-Revealing**: Method names describe what's being tested
+- **Less Noise**: Tests focus on behavior, not setup
+- **Domain Language**: Use business terminology in factory methods
+
+#### **4. Flexible Test Scenarios**
+- **Multiple Creation Patterns**: Static methods, builders, scenarios
+- **Composable**: Combine factories to create complex test setups
+- **Extensible**: Easy to add new product types or scenarios
+
+#### **5. Type Safety and IDE Support**
+- **Compile-time Safety**: Catch errors at compile time, not runtime
+- **IntelliSense**: IDE autocomplete helps discover factory methods
+- **Refactoring Support**: Rename methods with confidence
+
+### **Test Execution Results**
+
+#### **Command Used**
+```bash
+mvn test
+```
+
+#### **Final Results**
+```
+[INFO] Tests run: 62, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+#### **Test Breakdown**
+- **17 ProductRepositoryTest**: Repository layer operations
+- **13 CategoryRepositoryTest**: Category repository functionality  
+- **1 ProductServiceApplicationTests**: Spring Boot integration
+- **18 ProductServiceTest**: Product business logic validation
+- **13 CategoryServiceTest**: Category hierarchy operations
+
+### **Best Practices Applied**
+
+#### **Factory Design Patterns**
+1. **Static Factory Methods**: Simple, commonly-used scenarios
+2. **Builder Pattern**: Complex, customizable object creation
+3. **Object Mother**: Named scenarios that represent real business cases
+4. **Test Data Builder**: Fluent API for readable test setup
+
+#### **Naming Conventions**
+- **Descriptive Method Names**: `createWithLowStock()`, `thatIsActive()`
+- **Business Domain Language**: `laptop()`, `smartphone()`, `electronics()`
+- **Scenario-Based**: `createEcommerceScenario()`, `createInventoryTestScenario()`
+
+#### **Test Isolation**
+- **Counter Reset**: `TestDataFactory.resetCounter()` in `@BeforeEach`
+- **Immutable Objects**: Factory methods return new instances
+- **No Shared State**: Each factory call creates independent objects
+
+### **Future Refactoring Plan**
+Now that comprehensive test data factories are in place, refactoring existing test classes will be straightforward:
+
+1. **Repository Tests**: Replace manual setup with factory methods
+2. **Service Tests**: Use fluent builders for complex scenarios  
+3. **Integration Tests**: Leverage complete scenarios from TestScenarios
+
+The test data factory pattern foundation is now ready to support future test refactoring and new test development.
