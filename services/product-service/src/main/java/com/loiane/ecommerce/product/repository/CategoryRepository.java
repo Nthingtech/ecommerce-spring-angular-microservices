@@ -28,6 +28,12 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
 
     // Sorting and filtering
     List<Category> findByParentAndIsActiveTrueOrderByDisplayOrder(Category parent);
+    
+    // Additional methods for service layer
+    @Query("SELECT c FROM Category c WHERE c.parent IS NULL ORDER BY c.displayOrder ASC")
+    List<Category> findRootCategories();
+    
+    List<Category> findByParentOrderByDisplayOrderAsc(Category parent);
 
     // Existence and counting
     boolean existsBySlug(String slug);

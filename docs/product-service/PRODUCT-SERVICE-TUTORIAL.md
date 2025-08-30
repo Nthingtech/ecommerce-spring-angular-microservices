@@ -804,6 +804,185 @@ curl http://localhost:8082/actuator/health
 - 🔄 Add comprehensive service tests
 - 🔄 Apply validation and error handling
 
+---
+
+## 🧪 **Step 7: Service Layer Implementation with TDD (🔄 IN PROGRESS)**
+
+### **Modern Spring Service Layer Approach**
+
+**✅ Best Practices Applied:**
+- **No Interface/Implementation Split**: Use concrete service classes directly (modern Spring approach)
+- **Real Objects in Tests**: Mock only external dependencies (repositories), test real business logic
+- **Test-First Development**: Write comprehensive tests before implementing services
+- **Business Logic Separation**: Services handle transactions and business rules, repositories handle data access
+
+### **TDD Phase 1: RED - Create Failing Tests**
+
+#### **Service Test Architecture**
+```java
+@ExtendWith(MockitoExtension.class)
+class ProductServiceTest {
+    @Mock private ProductRepository productRepository;
+    @Mock private CategoryRepository categoryRepository;
+    @InjectMocks private ProductService productService; // Real object, not interface
+}
+```
+
+#### **ProductServiceTest - Business Operations**
+File: `/src/test/java/com/loiane/ecommerce/product/service/ProductServiceTest.java`
+
+**Test Categories Implemented:**
+- **CRUD Operations**: Create, read, update with business validation
+- **Inventory Management**: Stock reservation, release, confirmation
+- **Business Rules**: SKU uniqueness, category validation, status transitions
+- **Search & Filtering**: Active products, pagination, name search
+- **Bulk Operations**: Mass status updates
+
+**Key Test Methods (17 total):**
+```java
+// CREATE with validation
+@Test void shouldCreateProductSuccessfully()
+@Test void shouldThrowExceptionWhenCreatingProductWithDuplicateSku()
+@Test void shouldThrowExceptionWhenCreatingProductWithInactiveCategory()
+
+// READ operations
+@Test void shouldFindProductById()
+@Test void shouldThrowExceptionWhenProductNotFound()
+@Test void shouldFindActiveProductsWithPagination()
+
+// UPDATE with restrictions
+@Test void shouldUpdateProductSuccessfully()
+@Test void shouldNotAllowSkuChangeDuringUpdate()
+
+// INVENTORY management
+@Test void shouldReserveStockSuccessfully()
+@Test void shouldThrowExceptionWhenInsufficientStockForReservation()
+@Test void shouldReleaseStockSuccessfully()
+@Test void shouldConfirmStockSuccessfully()
+
+// BUSINESS operations
+@Test void shouldPublishProductSuccessfully()
+@Test void shouldDiscontinueProductSuccessfully()
+@Test void shouldFindLowStockProducts()
+@Test void shouldSearchActiveProductsByName()
+@Test void shouldBulkUpdateProductStatus()
+```
+
+#### **CategoryServiceTest - Hierarchy Management**
+File: `/src/test/java/com/loiane/ecommerce/product/service/CategoryServiceTest.java`
+
+**Test Categories Implemented:**
+- **Hierarchy Operations**: Parent-child relationships, level management
+- **CRUD with Validation**: Slug uniqueness, business rule enforcement
+- **Tree Operations**: Move categories, reorder, search
+- **Business Logic**: Deactivation rules, product counting
+
+**Key Test Methods (14 total):**
+```java
+// CREATE with hierarchy
+@Test void shouldCreateRootCategorySuccessfully()
+@Test void shouldCreateChildCategoryWithCorrectLevel()
+@Test void shouldThrowExceptionWhenCreatingCategoryWithDuplicateSlug()
+
+// READ operations
+@Test void shouldFindCategoryBySlug()
+@Test void shouldThrowExceptionWhenCategoryNotFoundBySlug()
+@Test void shouldGetCategoryHierarchy()
+
+// UPDATE with restrictions
+@Test void shouldUpdateCategorySuccessfully()
+@Test void shouldNotAllowSlugChangeDuringUpdate()
+
+// BUSINESS operations
+@Test void shouldMoveCategoryToNewParent()
+@Test void shouldDeactivateCategoryWithoutProducts()
+@Test void shouldThrowExceptionWhenDeactivatingCategoryWithActiveProducts()
+@Test void shouldFindCategoriesByPartialName()
+@Test void shouldReorderCategories()
+@Test void shouldCountProductsInCategory()
+```
+
+#### **Custom Exception Classes**
+File: `/src/main/java/com/loiane/ecommerce/product/exception/`
+
+**Business Exception Hierarchy:**
+```java
+// Product-related exceptions
+ProductNotFoundException.java       // Product not found by ID
+DuplicateSkuException.java          // SKU already exists
+InsufficientStockException.java     // Not enough inventory
+IllegalOperationException.java      // Invalid business operation
+
+// Category-related exceptions  
+CategoryNotFoundException.java      // Category not found by ID/slug
+DuplicateSlugException.java        // Slug already exists
+InactiveCategoryException.java     // Adding product to inactive category
+```
+
+#### **Enhanced Repository Methods**
+Extended existing repositories to support service layer needs:
+
+**ProductRepository additions:**
+```java
+// Pagination support for services
+Page<Product> findByStatus(ProductStatus status, Pageable pageable);
+Page<Product> findActiveProductsByNameContainingWithPagination(String name, Pageable pageable);
+
+// Business rule checking
+boolean existsByCategoryAndStatus(Category category, ProductStatus status);
+long countByCategoryAndStatus(Category category, ProductStatus status);
+```
+
+**CategoryRepository additions:**
+```java
+// Hierarchy management
+@Query("SELECT c FROM Category c WHERE c.parent IS NULL ORDER BY c.displayOrder ASC")
+List<Category> findRootCategories();
+List<Category> findByParentOrderByDisplayOrderAsc(Category parent);
+```
+
+#### **Expected Service Layer Business Logic**
+
+**ProductService Responsibilities:**
+- ✅ **Validation**: SKU uniqueness, category status checking
+- ✅ **Inventory Management**: Atomic stock operations with concurrency handling
+- ✅ **Status Lifecycle**: Publish/discontinue workflows with publishedAt timestamps
+- ✅ **Search Coordination**: Combine repository calls for complex filtering
+- ✅ **Transaction Management**: `@Transactional` boundaries for consistency
+
+**CategoryService Responsibilities:**
+- ✅ **Hierarchy Management**: Automatic level calculation, parent-child consistency
+- ✅ **Business Rules**: Prevent deactivation of categories with active products
+- ✅ **Tree Operations**: Move categories, maintain display order
+- ✅ **Search & Count**: Product counting per category, hierarchy traversal
+
+#### **TDD Phase 1 Status: RED ❌**
+
+**Current State:**
+```bash
+cd services/product-service
+mvn test -Dtest="*ServiceTest"
+# Expected: All tests fail (services not implemented yet)
+# Goal: 31 failing tests (17 ProductService + 14 CategoryService)
+```
+
+**Test Failures Expected:**
+- ProductService cannot be resolved to a type
+- CategoryService cannot be resolved to a type  
+- Missing business logic methods
+
+**Next Steps:**
+1. **Phase 2 (GREEN)**: Implement ProductService and CategoryService classes
+2. **Phase 3 (REFACTOR)**: Optimize performance, add caching, improve error handling
+
+### **TDD Benefits Demonstrated:**
+
+**✅ Clear API Contract**: Tests define exact service method signatures and behavior
+**✅ Business Logic Documentation**: Each test describes a business requirement
+**✅ Edge Case Coverage**: Exception scenarios and validation rules tested first
+**✅ Refactoring Safety**: Comprehensive test suite prevents regressions
+**✅ Modern Spring Practices**: No unnecessary abstractions, test real objects
+
 ## 🔧 **Troubleshooting Guide**
 
 ### **Issue 1: JPQL Collection Syntax Problems**

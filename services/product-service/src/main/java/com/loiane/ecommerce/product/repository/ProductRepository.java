@@ -47,6 +47,16 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     // Pagination support
     Page<Product> findByCategoryAndStatus(Category category, ProductStatus status, Pageable pageable);
+    
+    Page<Product> findByStatus(ProductStatus status, Pageable pageable);
+    
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND UPPER(p.name) LIKE UPPER(CONCAT('%', :name, '%'))")
+    Page<Product> findActiveProductsByNameContainingWithPagination(String name, Pageable pageable);
+
+    // Existence and counting methods for service layer
+    boolean existsByCategoryAndStatus(Category category, ProductStatus status);
+    
+    long countByCategoryAndStatus(Category category, ProductStatus status);
 
     // Custom queries for inventory management
     @Query("SELECT p FROM Product p WHERE p.stockQuantity - p.reservedQuantity <= p.lowStockThreshold")
