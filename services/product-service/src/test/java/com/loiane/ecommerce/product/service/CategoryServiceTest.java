@@ -307,4 +307,52 @@ class CategoryServiceTest {
         // then
         assertThat(count).isEqualTo(42L);
     }
+
+    @Test
+    @DisplayName("Should throw exception when creating category with parent that doesn't exist")
+    void shouldThrowExceptionWhenCreatingCategoryWithNonExistentParent() {
+        // given
+        when(categoryRepository.existsBySlug(childCategory.getSlug())).thenReturn(false);
+        when(categoryRepository.findById(rootId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> categoryService.createCategory(childCategory))
+                .isInstanceOf(CategoryNotFoundException.class)
+                .hasMessage("Parent category not found");
+        
+        verify(categoryRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should handle categories with no new order in reorder")
+    void shouldHandleCategoriesWithNoNewOrderInReorder() {
+        // given
+        Map<String, Integer> newOrder = new HashMap<>();
+        newOrder.put(rootId, 2);
+        // childId is missing from the map
+        
+        when(categoryRepository.findAllById(newOrder.keySet()))
+                .thenReturn(Arrays.asList(rootCategory));
+        when(categoryRepository.saveAll(anyList()))
+                .thenReturn(Arrays.asList(rootCategory));
+
+        // when
+        categoryService.reorderCategories(newOrder);
+
+        // then
+        assertThat(rootCategory.getDisplayOrder()).isEqualTo(2);
+        verify(categoryRepository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when finding category by id that doesn't exist")
+    void shouldThrowExceptionWhenFindingCategoryByIdThatDoesntExist() {
+        // given
+        when(categoryRepository.findById(rootId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> categoryService.findById(rootId))
+                .isInstanceOf(CategoryNotFoundException.class)
+                .hasMessage("Category not found with id: " + rootId);
+    }
 }

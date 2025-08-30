@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -129,6 +130,21 @@ class ProductServiceTest {
         assertThatThrownBy(() -> productService.createProduct(testProduct))
                 .isInstanceOf(InactiveCategoryException.class)
                 .hasMessage("Cannot add product to inactive category");
+        
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw exception when creating product with category that doesn't exist")
+    void shouldThrowExceptionWhenCreatingProductWithNonExistentCategory() {
+        // given
+        when(productRepository.existsBySku(testProduct.getSku())).thenReturn(false);
+        when(categoryRepository.findById(categoryId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> productService.createProduct(testProduct))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Category not found"); // Actual message from service implementation
         
         verify(productRepository, never()).save(any());
     }
@@ -386,5 +402,37 @@ class ProductServiceTest {
         assertThat(updatedCount).isEqualTo(1);
         assertThat(testProduct.getStatus()).isEqualTo(ProductStatus.INACTIVE);
         verify(productRepository).saveAll(anyList());
+    }
+
+    @Test
+    @DisplayName("Should handle empty product list in bulk update")
+    void shouldHandleEmptyProductListInBulkUpdate() {
+        // Given
+        List<String> emptyIds = Collections.emptyList();
+        ProductStatus newStatus = ProductStatus.INACTIVE;
+        
+        when(productRepository.findAllById(emptyIds)).thenReturn(Collections.emptyList());
+
+        // When
+        int updatedCount = productService.bulkUpdateStatus(emptyIds, newStatus);
+
+        // Then
+        assertThat(updatedCount).isZero();
+        verify(productRepository).findAllById(emptyIds);
+        verify(productRepository).saveAll(Collections.emptyList()); // Service still calls saveAll but with empty list
+    }    @Test
+    @DisplayName("Should throw exception when confirming more stock than reserved")
+    void shouldThrowExceptionWhenConfirmingMoreThanReserved() {
+        // given
+        testProduct.setReservedQuantity(5);
+        int quantityToConfirm = 10;
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
+
+        // when & then
+        assertThatThrownBy(() -> productService.confirmStock(productId, quantityToConfirm))
+                .isInstanceOf(IllegalOperationException.class)
+                .hasMessage("Cannot confirm more than reserved. Reserved: 5, Requested: 10");
+        
+        verify(productRepository, never()).save(any());
     }
 }

@@ -88,7 +88,7 @@ public class Category {
     }
 
     public boolean hasProducts() {
-        return !products.isEmpty();
+        return products != null && !products.isEmpty();
     }
 
     public String getFullPath() {
