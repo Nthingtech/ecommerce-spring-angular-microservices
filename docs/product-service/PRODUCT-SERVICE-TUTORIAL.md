@@ -341,13 +341,192 @@ published_at  TIMESTAMPTZ
 
 This design ensures our microservices can handle global customers and distributed deployments correctly from the start.
 
-### **Step 6: Repository Layer**
-- Implement ProductRepository interface
-- Implement CategoryRepository interface
-- Add custom query methods
-- Create repository tests
+### **Step 6: Repository Layer with Test-Driven Development (TDD) (🔄 IN PROGRESS)**
 
-### **Step 7: Service Layer**
+We'll implement the repository layer using **Test-Driven Development (TDD)** approach:
+1. **RED**: Write failing tests first
+2. **GREEN**: Implement minimal code to make tests pass  
+3. **REFACTOR**: Improve code quality while keeping tests green
+
+#### **TDD Phase 1: RED - Write Failing Tests**
+
+**Added Test Dependencies:**
+Updated `pom.xml` with testing frameworks:
+```xml
+<!-- Testing Dependencies -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-testcontainers</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.testcontainers</groupId>
+    <artifactId>postgresql</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+**Created Test Configuration:**
+File: `/src/test/resources/application-test.properties`
+```properties
+# H2 in-memory database for fast unit tests
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+
+# Disable actuator for tests
+management.endpoints.access.default=none
+
+# Debug logging
+logging.level.org.hibernate.SQL=DEBUG
+logging.level.com.loiane.ecommerce.product=DEBUG
+```
+
+**Created ProductRepositoryTest:**
+File: `/src/test/java/com/loiane/ecommerce/product/repository/ProductRepositoryTest.java`
+
+**Test Coverage:**
+- ✅ **Basic CRUD Operations**: Save, find by ID, delete
+- ✅ **Unique Constraints**: Find by SKU, check SKU existence  
+- ✅ **Status Filtering**: Find products by status (ACTIVE, INACTIVE, DISCONTINUED)
+- ✅ **Category Relationships**: Find products by category
+- ✅ **Inventory Management**: Find products with low stock, in-stock products
+- ✅ **Search Functionality**: Find by name containing (case-insensitive)
+- ✅ **Price Filtering**: Find products by price range
+- ✅ **Pagination Support**: Category and status filtering with pagination
+- ✅ **Business Logic**: Custom queries for inventory and stock management
+
+**Key Test Methods:**
+```java
+@Test void shouldSaveAndFindProductById()
+@Test void shouldFindProductBySku()
+@Test void shouldFindProductsByStatus()  
+@Test void shouldFindProductsByCategory()
+@Test void shouldFindProductsWithLowStock()
+@Test void shouldFindProductsByNameContaining()
+@Test void shouldFindProductsByCategoryAndStatusWithPagination()
+@Test void shouldFindProductsInStock()
+@Test void shouldCountProductsByCategory()
+@Test void shouldFindProductsByPriceRange()
+@Test void shouldCheckIfSkuExists()
+```
+
+**Created CategoryRepositoryTest:**
+File: `/src/test/java/com/loiane/ecommerce/product/repository/CategoryRepositoryTest.java`
+
+**Test Coverage:**
+- ✅ **Basic CRUD Operations**: Save, find by ID, delete
+- ✅ **Unique Constraints**: Find by slug, check slug existence
+- ✅ **Hierarchy Management**: Find root categories, find by parent, find by level
+- ✅ **Status Filtering**: Find active/inactive categories
+- ✅ **Search Functionality**: Find by name containing (case-insensitive)  
+- ✅ **Sorting**: Categories ordered by display order
+- ✅ **Tree Operations**: Find categories with children, find leaf categories
+- ✅ **Counting**: Count categories by parent
+
+**Key Test Methods:**
+```java
+@Test void shouldSaveAndFindCategoryById()
+@Test void shouldFindCategoryBySlug()
+@Test void shouldFindRootCategories() 
+@Test void shouldFindCategoriesByParent()
+@Test void shouldFindCategoriesByLevel()
+@Test void shouldFindActiveCategories()
+@Test void shouldFindCategoriesByNameContaining()
+@Test void shouldFindCategoriesWithChildren()
+@Test void shouldFindLeafCategories()
+```
+
+**Test Results - RED Phase ✅**
+Ran tests with `mvn test` - **All tests failed as expected** because:
+- Repository interfaces don't exist yet
+- Entities missing `@Builder` annotation for test data creation
+- Custom query methods not implemented
+
+```
+[ERROR] cannot find symbol: class ProductRepository
+[ERROR] cannot find symbol: class CategoryRepository  
+[ERROR] cannot find symbol: method builder()
+[INFO] 15 errors - BUILD FAILURE
+```
+
+**Perfect!** This is exactly what we want in TDD - failing tests that define our requirements.
+
+#### **Next: TDD Phase 2 - GREEN (Implementation)**
+
+**To Implement:**
+2. Add `@Builder` annotations to entities  
+3. Create `ProductRepository` interface with Spring Data JPA
+4. Create `CategoryRepository` interface with custom queries
+5. Run tests again to see them pass (GREEN phase)
+
+**Repository Methods to Implement:**
+
+**ProductRepository:**
+```java
+// Basic Spring Data JPA methods (auto-generated)
+Optional<Product> findBySku(String sku);
+List<Product> findByStatus(ProductStatus status);
+List<Product> findByCategory(Category category);
+boolean existsBySku(String sku);
+long countByCategory(Category category);
+List<Product> findByNameContainingIgnoreCase(String name);
+List<Product> findByBasePriceBetween(BigDecimal min, BigDecimal max);
+Page<Product> findByCategoryAndStatus(Category category, ProductStatus status, Pageable pageable);
+
+// Custom @Query methods
+@Query("SELECT p FROM Product p WHERE p.stockQuantity - p.reservedQuantity <= p.lowStockThreshold")
+List<Product> findProductsWithLowStock();
+
+@Query("SELECT p FROM Product p WHERE p.stockQuantity - p.reservedQuantity > 0")  
+List<Product> findProductsInStock();
+```
+
+**CategoryRepository:**
+```java
+// Basic Spring Data JPA methods
+Optional<Category> findBySlug(String slug);
+List<Category> findByParentIsNull();
+List<Category> findByParent(Category parent);
+List<Category> findByLevel(int level);
+List<Category> findByActiveTrue();
+List<Category> findByActiveFalse();
+boolean existsBySlug(String slug);
+long countByParent(Category parent);
+List<Category> findByNameContainingIgnoreCase(String name);
+List<Category> findByParentAndActiveTrueOrderByDisplayOrder(Category parent);
+
+// Custom @Query methods  
+@Query("SELECT DISTINCT c FROM Category c WHERE c.children IS NOT EMPTY")
+List<Category> findCategoriesWithChildren();
+
+@Query("SELECT c FROM Category c WHERE c.children IS EMPTY")
+List<Category> findLeafCategories();
+```
+
+**Current Status:**
+- ❌ Repository interfaces not created
+- ❌ Tests failing (expected in RED phase)
+- ⏳ **Ready for GREEN phase implementation**
+
+### **Step 7: Service Layer
 - Implement ProductService
 - Implement CategoryService
 - Add business logic and validation
