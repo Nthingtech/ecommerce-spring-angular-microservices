@@ -1076,3 +1076,208 @@ spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 - Database schema is recreated on each startup (good for development)
 - All SQL queries are logged for learning purposes
 - Debug logging is enabled for detailed troubleshooting
+
+---
+
+## **Step 7: Service Layer Implementation - GREEN Phase (✅ COMPLETED)**
+
+### **TDD GREEN Phase Achievement**
+Successfully implemented service layer business logic to make all tests pass! 
+
+#### **Implementation Results**
+- ✅ **62 total tests passing** (17 Product Repository + 13 Category Repository + 1 Application + 18 Product Service + 13 Category Service)
+- ✅ **Zero compilation errors** resolved
+- ✅ **Zero test failures** achieved
+- ✅ **Complete business logic** implemented
+
+### **Service Classes Created**
+
+#### **ProductService Implementation**
+File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/service/ProductService.java`
+
+**Business Operations Implemented:**
+1. **CRUD Operations**: Create, read, update, delete with validation
+2. **Inventory Management**: Reserve, release, confirm stock operations
+3. **Business Rules**: Category validation, SKU uniqueness, status transitions
+4. **Error Handling**: Custom exceptions for all business scenarios
+
+**Key Features:**
+```java
+@Service
+@Transactional
+public class ProductService {
+    
+    // Comprehensive product creation with validation
+    public Product createProduct(Product product) {
+        validateProductForCreation(product);
+        return productRepository.save(product);
+    }
+    
+    // Stock management operations
+    public Product reserveStock(String productId, Integer quantity) { /* ... */ }
+    public Product releaseStock(String productId, Integer quantity) { /* ... */ }
+    public Product confirmStockReservation(String productId, Integer quantity) { /* ... */ }
+    
+    // Business state transitions
+    public Product publishProduct(String id) { /* ... */ }
+    public Product discontinueProduct(String id) { /* ... */ }
+}
+```
+
+#### **CategoryService Implementation**
+File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/service/CategoryService.java`
+
+**Hierarchy Operations Implemented:**
+1. **Category Management**: Create, update, delete with level calculation
+2. **Tree Operations**: Move categories, maintain hierarchy integrity
+3. **Business Rules**: Parent-child relationships, deactivation constraints
+4. **Search Operations**: By slug, hierarchy traversal
+
+**Key Features:**
+```java
+@Service
+@Transactional
+public class CategoryService {
+    
+    // Hierarchy-aware category creation
+    public Category createCategory(Category category) {
+        calculateAndSetLevel(category);
+        return categoryRepository.save(category);
+    }
+    
+    // Tree structure operations
+    public Category moveCategory(String categoryId, String newParentId) { /* ... */ }
+    public Category deactivateCategory(String id) { /* ... */ }
+    
+    // Level calculation for hierarchy
+    private void calculateAndSetLevel(Category category) { /* ... */ }
+}
+```
+
+### **Test Execution Success**
+
+#### **Command Used**
+```bash
+mvn test
+```
+
+#### **Final Results**
+```
+[INFO] Tests run: 62, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+#### **Test Breakdown**
+- **17 ProductRepositoryTest**: Repository layer operations
+- **13 CategoryRepositoryTest**: Category repository functionality  
+- **1 ProductServiceApplicationTests**: Spring Boot integration
+- **18 ProductServiceTest**: Product business logic validation
+- **13 CategoryServiceTest**: Category hierarchy operations
+
+### **Technical Issues Resolved**
+
+#### **Issue 1: Entity Builder Pattern Limitations**
+**Problem**: Manual builder pattern doesn't support `.id()` method
+```java
+// ❌ This failed - builder doesn't have id() method
+Category category = Category.builder()
+    .id(categoryId)  // Compilation error
+    .name("Test")
+    .build();
+```
+
+**✅ Solution**: Set ID after building
+```java
+// ✅ This works - set ID via setter after building
+Category category = Category.builder()
+    .name("Test")
+    .build();
+category.setId(categoryId); // Set ID post-build
+```
+
+#### **Issue 2: Boolean Getter/Setter Method Names**
+**Problem**: Category entity uses `getIsActive()`/`setIsActive()`, not standard `isActive()`
+```java
+// ❌ This failed - wrong method name
+assertThat(category.isActive()).isFalse();
+testCategory.setActive(false);
+```
+
+**✅ Solution**: Use correct method names
+```java
+// ✅ This works - correct Boolean field methods
+assertThat(category.getIsActive()).isFalse();
+testCategory.setIsActive(false);
+```
+
+#### **Issue 3: Unnecessary Test Stubbing**
+**Problem**: Mockito detected unused stubbing in CategoryServiceTest
+```java
+// ❌ These were unnecessary for getCategoryHierarchy()
+when(categoryRepository.findByParentOrderByDisplayOrderAsc(rootCategory))
+    .thenReturn(Arrays.asList(childCategory));
+when(categoryRepository.findByParentOrderByDisplayOrderAsc(childCategory))
+    .thenReturn(Collections.emptyList());
+```
+
+**✅ Solution**: Remove unused mocks, keep only what's needed
+```java
+// ✅ This is all that's needed
+when(categoryRepository.findRootCategories()).thenReturn(Arrays.asList(rootCategory));
+```
+
+### **Modern Spring Practices Applied**
+
+#### **No Interface-Implementation Split**
+Following modern Spring Boot practices, service classes are implemented directly without interface abstraction:
+```java
+// ✅ Modern approach - direct service classes
+@Service
+public class ProductService { /* implementation */ }
+
+// ❌ Avoided - unnecessary interface layer
+public interface ProductService { /* contract */ }
+@Service
+public class ProductServiceImpl implements ProductService { /* implementation */ }
+```
+
+#### **Real Objects in Tests**
+Used real entity objects in tests, mocking only the repository layer:
+```java
+// ✅ Real entity objects
+Product testProduct = Product.builder()
+    .name("Test Product")
+    .build();
+
+// ✅ Mock only repositories
+@Mock
+private ProductRepository productRepository;
+@Mock  
+private CategoryRepository categoryRepository;
+```
+
+### **Business Logic Validation**
+
+#### **Product Service Business Rules**
+- **Category Validation**: Products cannot be created with inactive categories
+- **SKU Uniqueness**: Duplicate SKUs are rejected with custom exception
+- **Stock Management**: Reserve/Release/Confirm operations maintain inventory integrity
+- **Status Transitions**: Proper validation for ACTIVE → INACTIVE → DISCONTINUED flow
+
+#### **Category Service Business Rules**
+- **Hierarchy Integrity**: Parent-child relationships maintained correctly
+- **Level Calculation**: Automatic level assignment based on parent hierarchy
+- **Deactivation Rules**: Categories with active products cannot be deactivated
+- **Move Operations**: Category movement updates levels for entire subtree
+
+### **Next Steps Available**
+
+#### **REFACTOR Phase (Optional)**
+- **Performance Optimization**: Add caching for frequently accessed categories
+- **Code Cleanup**: Extract common validation logic to utility classes
+- **Method Simplification**: Break down complex methods if needed
+
+#### **Controller Layer (Next Major Step)**
+- **REST API Endpoints**: Create ProductController and CategoryController
+- **API Documentation**: Add OpenAPI/Swagger documentation
+- **Integration Tests**: Add full request-response testing

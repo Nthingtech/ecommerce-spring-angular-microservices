@@ -56,7 +56,6 @@ class ProductServiceTest {
         categoryId = "test-category-id";
 
         testCategory = Category.builder()
-                .id(categoryId)
                 .name("Electronics")
                 .slug("electronics")
                 .active(true)
@@ -65,9 +64,9 @@ class ProductServiceTest {
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
+        testCategory.setId(categoryId); // Set ID after building
 
         testProduct = Product.builder()
-                .id(productId)
                 .name("Test Product")
                 .description("Test Description")
                 .shortDescription("Short description")
@@ -83,6 +82,7 @@ class ProductServiceTest {
                 .updatedAt(OffsetDateTime.now())
                 .publishedAt(OffsetDateTime.now())
                 .build();
+        testProduct.setId(productId); // Set ID after building
     }
 
     // CREATE OPERATIONS
@@ -122,7 +122,7 @@ class ProductServiceTest {
     @DisplayName("Should throw exception when creating product with inactive category")
     void shouldThrowExceptionWhenCreatingProductWithInactiveCategory() {
         // given
-        testCategory.setActive(false);
+        testCategory.setIsActive(false);
         when(productRepository.existsBySku(testProduct.getSku())).thenReturn(false);
         when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(testCategory));
 

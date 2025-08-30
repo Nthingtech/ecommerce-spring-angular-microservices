@@ -47,7 +47,6 @@ class CategoryServiceTest {
         childId = "child-category-id";
 
         rootCategory = Category.builder()
-                .id(rootId)
                 .name("Electronics")
                 .slug("electronics")
                 .description("Electronic products")
@@ -57,9 +56,9 @@ class CategoryServiceTest {
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
+        rootCategory.setId(rootId); // Set ID after building
 
         childCategory = Category.builder()
-                .id(childId)
                 .name("Smartphones")
                 .slug("smartphones")
                 .description("Mobile phones")
@@ -70,6 +69,7 @@ class CategoryServiceTest {
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
+        childCategory.setId(childId); // Set ID after building
     }
 
     // CREATE OPERATIONS
@@ -152,10 +152,6 @@ class CategoryServiceTest {
     void shouldGetCategoryHierarchy() {
         // given
         when(categoryRepository.findRootCategories()).thenReturn(Arrays.asList(rootCategory));
-        when(categoryRepository.findByParentOrderByDisplayOrderAsc(rootCategory))
-                .thenReturn(Arrays.asList(childCategory));
-        when(categoryRepository.findByParentOrderByDisplayOrderAsc(childCategory))
-                .thenReturn(Collections.emptyList());
 
         // when
         List<Category> hierarchy = categoryService.getCategoryHierarchy();
@@ -214,10 +210,10 @@ class CategoryServiceTest {
         // given
         String newParentId = "new-parent-id";
         Category newParent = Category.builder()
-                .id(newParentId)
                 .name("Home & Garden")
                 .level(0)
                 .build();
+        newParent.setId(newParentId); // Set ID after building
         
         when(categoryRepository.findById(childId)).thenReturn(Optional.of(childCategory));
         when(categoryRepository.findById(newParentId)).thenReturn(Optional.of(newParent));
@@ -244,7 +240,7 @@ class CategoryServiceTest {
         Category deactivated = categoryService.deactivateCategory(rootId);
 
         // then
-        assertThat(deactivated.isActive()).isFalse();
+        assertThat(deactivated.getIsActive()).isFalse();
         verify(categoryRepository).save(rootCategory);
     }
 
