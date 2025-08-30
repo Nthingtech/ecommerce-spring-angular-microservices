@@ -6,7 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 @Entity
@@ -44,6 +44,11 @@ public class Product {
     @Column(nullable = false, length = 20)
     private ProductStatus status = ProductStatus.ACTIVE;
 
+    // Category relationship
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     // Inventory fields
     @Min(value = 0, message = "Stock quantity cannot be negative")
     @Column(name = "stock_quantity", nullable = false)
@@ -63,14 +68,14 @@ public class Product {
     // Timestamps
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     @Column(name = "published_at")
-    private LocalDateTime publishedAt;
+    private OffsetDateTime publishedAt;
 
     // Constructors
     public Product() {
@@ -101,7 +106,7 @@ public class Product {
 
     public void publish() {
         this.status = ProductStatus.ACTIVE;
-        this.publishedAt = LocalDateTime.now();
+        this.publishedAt = OffsetDateTime.now();
     }
 
     public void unpublish() {
@@ -170,6 +175,14 @@ public class Product {
         this.status = status;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
     public Integer getStockQuantity() {
         return stockQuantity;
     }
@@ -202,27 +215,27 @@ public class Product {
         this.trackInventory = trackInventory;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
+    public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdatedAt() {
+    public OffsetDateTime getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public LocalDateTime getPublishedAt() {
+    public OffsetDateTime getPublishedAt() {
         return publishedAt;
     }
 
-    public void setPublishedAt(LocalDateTime publishedAt) {
+    public void setPublishedAt(OffsetDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 

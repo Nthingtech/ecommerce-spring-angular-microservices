@@ -163,6 +163,7 @@ File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/enti
 - **UUID Primary Key**: Auto-generated unique identifier
 - **Comprehensive Validation**: Jakarta validation annotations for data integrity
 - **Inventory Management**: Stock tracking with reserved quantities
+- **Category Relationship**: Many-to-One relationship with Category entity
 - **Audit Timestamps**: Automatic creation and update timestamps
 - **Business Logic**: Built-in methods for stock checking and product lifecycle
 
@@ -175,13 +176,14 @@ File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/enti
 - sku (String, unique, required) // Stock Keeping Unit
 - basePrice (BigDecimal)         // Price with precision
 - status (ProductStatus enum)    // ACTIVE, INACTIVE, DISCONTINUED
+- category (Category)            // Many-to-One relationship
 - stockQuantity (Integer)        // Total stock
 - reservedQuantity (Integer)     // Reserved for pending orders
 - lowStockThreshold (Integer)    // Alert threshold
 - trackInventory (Boolean)       // Whether to track inventory
-- createdAt (LocalDateTime)      // Auto-generated
-- updatedAt (LocalDateTime)      // Auto-updated
-- publishedAt (LocalDateTime)    // When product was published
+- createdAt (OffsetDateTime)       // Auto-generated
+- updatedAt (OffsetDateTime)       // Auto-updated
+- publishedAt (OffsetDateTime)     // When product was published
 ```
 
 **Business Methods:**
@@ -190,6 +192,41 @@ File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/enti
 - `isLowStock()`: Checks if below threshold
 - `isPublished()`: Checks if active and published
 - `publish()`, `unpublish()`, `discontinue()`: Lifecycle management
+
+#### **Created Category Entity**
+File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/entity/Category.java`
+
+**Key Features:**
+- **UUID Primary Key**: Auto-generated unique identifier
+- **Hierarchical Structure**: Self-referencing parent-child relationships
+- **URL-Friendly Slugs**: Unique slug field for SEO-friendly URLs
+- **Product Relationships**: One-to-Many relationship with products
+- **Level Tracking**: Automatic hierarchy level calculation
+- **Display Ordering**: Custom sort order support
+
+**Entity Fields:**
+```java
+- id (String, UUID)              // Primary key
+- name (String, required)        // Category name
+- slug (String, unique, required)// URL-friendly identifier
+- description (String)           // Category description
+- parent (Category)              // Self-referencing parent category
+- children (List<Category>)      // Child categories
+- level (Integer)                // Hierarchy depth (0 for root)
+- displayOrder (Integer)         // Sort order
+- isActive (Boolean)             // Active/inactive status
+- products (List<Product>)       // Related products
+- createdAt (OffsetDateTime)     // Auto-generated
+- updatedAt (OffsetDateTime)     // Auto-updated
+```
+
+**Business Methods:**
+- `isRootCategory()`: Checks if category has no parent
+- `hasChildren()`: Checks if category has subcategories
+- `hasProducts()`: Checks if category has associated products
+- `getFullPath()`: Returns hierarchical path (e.g., "Electronics > Smartphones")
+- `addChild()`, `removeChild()`: Manage category hierarchy
+- `activate()`, `deactivate()`: Toggle category status
 
 #### **Created ProductStatus Enum**
 File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/entity/ProductStatus.java`
@@ -210,6 +247,40 @@ public enum ProductStatus {
 - **@Digits**: Price precision control (10 integer, 2 decimal places)
 - **@Min**: Non-negative quantities
 - **@Enumerated**: Enum persistence as string
+
+#### **🕐 Timezone Handling Design Decision**
+
+**Why OffsetDateTime over LocalDateTime:**
+
+For microservices architecture, we chose `OffsetDateTime` instead of `LocalDateTime` for all timestamp fields because:
+
+**✅ Advantages:**
+- **Timezone Awareness**: Stores exact moments in time with timezone offset information
+- **Global Applications**: Essential for international ecommerce platforms
+- **Microservices Best Practice**: Services may run in different regions/timezones  
+- **Database Optimization**: PostgreSQL uses `TIMESTAMPTZ` (timestamp with timezone) for better performance
+- **API Consistency**: JSON responses include timezone information (`2024-08-29T10:30:00+02:00`)
+- **Audit Compliance**: Legal requirements often need precise timestamps
+
+**Database Storage:**
+```sql
+-- PostgreSQL creates timezone-aware columns:
+created_at    TIMESTAMPTZ NOT NULL,
+updated_at    TIMESTAMPTZ NOT NULL,
+published_at  TIMESTAMPTZ
+```
+
+**JSON API Response Example:**
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "iPhone 15",
+  "createdAt": "2024-08-29T10:30:00+02:00",
+  "updatedAt": "2024-08-29T14:15:30+02:00"
+}
+```
+
+This design ensures our microservices can handle global customers and distributed deployments correctly from the start.
 
 ### **Step 6: Repository Layer**
 - Implement ProductRepository interface
