@@ -144,7 +144,8 @@ logging.level.org.springframework.web=DEBUG
 - ✅ **Project generated** with Spring Initializr
 - ✅ **Database setup** with Docker Compose
 - ✅ **Configuration completed** for development environment
-- ❌ **Application startup failed** (likely due to missing database connection)
+- ✅ **Product entity created** with comprehensive validation and business logic
+- ❌ **Application startup** needs database connection testing
 
 ## 📋 **Next Steps (TO BE IMPLEMENTED)**
 
@@ -153,11 +154,62 @@ logging.level.org.springframework.web=DEBUG
 - Run the Spring Boot application
 - Verify successful startup and database connection
 
-### **Step 5: Domain Model Implementation**
-- Create Product entity
-- Create Category entity
-- Define relationships and constraints
-- Add validation annotations
+### **Step 5: Domain Model Implementation (✅ COMPLETED)**
+
+#### **Created Product Entity**
+File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/entity/Product.java`
+
+**Key Features:**
+- **UUID Primary Key**: Auto-generated unique identifier
+- **Comprehensive Validation**: Jakarta validation annotations for data integrity
+- **Inventory Management**: Stock tracking with reserved quantities
+- **Audit Timestamps**: Automatic creation and update timestamps
+- **Business Logic**: Built-in methods for stock checking and product lifecycle
+
+**Entity Fields:**
+```java
+- id (String, UUID)              // Primary key
+- name (String, required)        // Product name
+- description (Text)             // Full description
+- shortDescription (String)      // Brief summary
+- sku (String, unique, required) // Stock Keeping Unit
+- basePrice (BigDecimal)         // Price with precision
+- status (ProductStatus enum)    // ACTIVE, INACTIVE, DISCONTINUED
+- stockQuantity (Integer)        // Total stock
+- reservedQuantity (Integer)     // Reserved for pending orders
+- lowStockThreshold (Integer)    // Alert threshold
+- trackInventory (Boolean)       // Whether to track inventory
+- createdAt (LocalDateTime)      // Auto-generated
+- updatedAt (LocalDateTime)      // Auto-updated
+- publishedAt (LocalDateTime)    // When product was published
+```
+
+**Business Methods:**
+- `getAvailableQuantity()`: Returns stock minus reserved
+- `isInStock()`: Checks if product is available
+- `isLowStock()`: Checks if below threshold
+- `isPublished()`: Checks if active and published
+- `publish()`, `unpublish()`, `discontinue()`: Lifecycle management
+
+#### **Created ProductStatus Enum**
+File: `/services/product-service/src/main/java/com/loiane/ecommerce/product/entity/ProductStatus.java`
+
+```java
+public enum ProductStatus {
+    ACTIVE,        // Available for sale
+    INACTIVE,      // Hidden from catalog
+    DISCONTINUED   // No longer available
+}
+```
+
+#### **Validation Features:**
+- **@NotBlank**: Required string fields (name, sku, currency)
+- **@Size**: String length constraints
+- **@NotNull**: Required fields
+- **@DecimalMin**: Minimum price validation
+- **@Digits**: Price precision control (10 integer, 2 decimal places)
+- **@Min**: Non-negative quantities
+- **@Enumerated**: Enum persistence as string
 
 ### **Step 6: Repository Layer**
 - Implement ProductRepository interface
