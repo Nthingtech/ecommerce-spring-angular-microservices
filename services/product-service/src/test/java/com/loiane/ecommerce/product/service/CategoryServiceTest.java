@@ -1,7 +1,6 @@
 package com.loiane.ecommerce.product.service;
 
 import com.loiane.ecommerce.product.entity.Category;
-import com.loiane.ecommerce.product.entity.Product;
 import com.loiane.ecommerce.product.entity.ProductStatus;
 import com.loiane.ecommerce.product.exception.CategoryNotFoundException;
 import com.loiane.ecommerce.product.exception.DuplicateSlugException;
@@ -85,7 +84,7 @@ class CategoryServiceTest {
 
         // then
         assertThat(created).isNotNull();
-        assertThat(created.getLevel()).isEqualTo(0);
+        assertThat(created.getLevel()).isZero();
         assertThat(created.getParent()).isNull();
         verify(categoryRepository).save(rootCategory);
     }
