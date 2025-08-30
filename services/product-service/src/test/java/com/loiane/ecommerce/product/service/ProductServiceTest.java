@@ -8,6 +8,9 @@ import com.loiane.ecommerce.product.exception.IllegalOperationException;
 import com.loiane.ecommerce.product.exception.InactiveCategoryException;
 import com.loiane.ecommerce.product.exception.InsufficientStockException;
 import com.loiane.ecommerce.product.exception.ProductNotFoundException;
+import com.loiane.ecommerce.product.factory.CategoryTestDataFactory;
+import com.loiane.ecommerce.product.factory.ProductTestDataFactory;
+import com.loiane.ecommerce.product.factory.TestDataFactory;
 import com.loiane.ecommerce.product.repository.CategoryRepository;
 import com.loiane.ecommerce.product.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +26,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -52,37 +54,34 @@ class ProductServiceTest {
 
     @BeforeEach
     void setUp() {
+        TestDataFactory.resetCounter();
+        
         productId = "test-product-id";
         categoryId = "test-category-id";
 
-        testCategory = Category.builder()
-                .name("Electronics")
-                .slug("electronics")
-                .active(true)
-                .level(0)
-                .displayOrder(1)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        testCategory = CategoryTestDataFactory.aCategory()
+                .withName("Electronics")
+                .withSlug("electronics")
+                .thatIsActive()
                 .build();
         testCategory.setId(categoryId); // Set ID after building
 
-        testProduct = Product.builder()
-                .name("Test Product")
-                .description("Test Description")
-                .shortDescription("Short description")
-                .sku("TEST-001")
-                .basePrice(new BigDecimal("99.99"))
-                .stockQuantity(100)
-                .reservedQuantity(0)
-                .lowStockThreshold(10)
-                .trackInventory(true)
-                .status(ProductStatus.ACTIVE)
-                .category(testCategory)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .publishedAt(OffsetDateTime.now())
+        testProduct = ProductTestDataFactory.aProduct()
+                .withName("Test Product")
+                .withDescription("Test Description")
+                .withSku("TEST-001")
+                .withPrice("99.99")
+                .withStock(100)
+                .withReservedStock(0)
+                .withLowStockThreshold(10)
+                .thatIsActive()
+                .withCategory(testCategory)
                 .build();
         testProduct.setId(productId); // Set ID after building
+        // Set additional fields not in builder
+        testProduct.setShortDescription("Short description");
+        testProduct.setTrackInventory(true);
+        testProduct.setPublishedAt(testProduct.getCreatedAt());
     }
 
     // CREATE OPERATIONS

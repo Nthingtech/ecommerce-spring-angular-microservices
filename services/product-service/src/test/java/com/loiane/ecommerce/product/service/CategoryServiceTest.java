@@ -5,6 +5,8 @@ import com.loiane.ecommerce.product.entity.ProductStatus;
 import com.loiane.ecommerce.product.exception.CategoryNotFoundException;
 import com.loiane.ecommerce.product.exception.DuplicateSlugException;
 import com.loiane.ecommerce.product.exception.IllegalOperationException;
+import com.loiane.ecommerce.product.factory.CategoryTestDataFactory;
+import com.loiane.ecommerce.product.factory.TestDataFactory;
 import com.loiane.ecommerce.product.repository.CategoryRepository;
 import com.loiane.ecommerce.product.repository.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -42,31 +43,29 @@ class CategoryServiceTest {
 
     @BeforeEach
     void setUp() {
+        TestDataFactory.resetCounter();
+        
         rootId = "root-category-id";
         childId = "child-category-id";
 
-        rootCategory = Category.builder()
-                .name("Electronics")
-                .slug("electronics")
-                .description("Electronic products")
-                .active(true)
-                .level(0)
-                .displayOrder(1)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        rootCategory = CategoryTestDataFactory.aCategory()
+                .withName("Electronics")
+                .withSlug("electronics")
+                .withDescription("Electronic products")
+                .thatIsActive()
+                .withLevel(0)
+                .withDisplayOrder(1)
                 .build();
         rootCategory.setId(rootId); // Set ID after building
 
-        childCategory = Category.builder()
-                .name("Smartphones")
-                .slug("smartphones")
-                .description("Mobile phones")
-                .parent(rootCategory)
-                .active(true)
-                .level(1)
-                .displayOrder(1)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        childCategory = CategoryTestDataFactory.aCategory()
+                .withName("Smartphones")
+                .withSlug("smartphones")
+                .withDescription("Mobile phones")
+                .withParent(rootCategory)
+                .thatIsActive()
+                .withLevel(1)
+                .withDisplayOrder(1)
                 .build();
         childCategory.setId(childId); // Set ID after building
     }

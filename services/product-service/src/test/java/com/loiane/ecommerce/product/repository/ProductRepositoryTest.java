@@ -3,6 +3,9 @@ package com.loiane.ecommerce.product.repository;
 import com.loiane.ecommerce.product.entity.Category;
 import com.loiane.ecommerce.product.entity.Product;
 import com.loiane.ecommerce.product.entity.ProductStatus;
+import com.loiane.ecommerce.product.factory.CategoryTestDataFactory;
+import com.loiane.ecommerce.product.factory.ProductTestDataFactory;
+import com.loiane.ecommerce.product.factory.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,82 +43,52 @@ class ProductRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create test categories
-        electronicsCategory = Category.builder()
-                .name("Electronics")
-                .slug("electronics")
-                .description("Electronic products")
-                .level(0)
-                .displayOrder(1)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .build();
+        // Reset factory counter for test isolation
+        TestDataFactory.resetCounter();
+        
+        // Create test categories using factory
+        electronicsCategory = CategoryTestDataFactory.createRoot("Electronics");
         entityManager.persistAndFlush(electronicsCategory);
 
-        clothingCategory = Category.builder()
-                .name("Clothing")
-                .slug("clothing")
-                .description("Clothing items")
-                .level(0)
-                .displayOrder(2)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .build();
+        clothingCategory = CategoryTestDataFactory.createRoot("Clothing");
         entityManager.persistAndFlush(clothingCategory);
 
-        // Create test products
-        laptop = Product.builder()
-                .name("Gaming Laptop")
-                .description("High-performance gaming laptop")
-                .shortDescription("Gaming laptop with RTX graphics")
-                .sku("LAPTOP-001")
-                .basePrice(new BigDecimal("1299.99"))
-                .status(ProductStatus.ACTIVE)
-                .category(electronicsCategory)
-                .stockQuantity(10)
-                .reservedQuantity(2)
-                .lowStockThreshold(10) // Changed from 5 to 10, so available (8) < threshold (10)
-                .trackInventory(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .publishedAt(OffsetDateTime.now())
+        // Create test products using factory
+        laptop = ProductTestDataFactory.aProduct()
+                .withName("Gaming Laptop")
+                .withSku("LAPTOP-001")
+                .withPrice("1299.99")
+                .withCategory(electronicsCategory)
+                .withStock(10)
+                .withReservedStock(2)
+                .withLowStockThreshold(10) // Available (8) < threshold (10) makes it low stock
+                .thatIsActive()
                 .build();
+        laptop.setPublishedAt(OffsetDateTime.now());
         entityManager.persistAndFlush(laptop);
 
-        smartphone = Product.builder()
-                .name("Smartphone Pro")
-                .description("Latest smartphone with advanced features")
-                .shortDescription("Pro smartphone with premium camera")
-                .sku("PHONE-001")
-                .basePrice(new BigDecimal("899.99"))
-                .status(ProductStatus.ACTIVE)
-                .category(electronicsCategory)
-                .stockQuantity(25)
-                .reservedQuantity(0)
-                .lowStockThreshold(10)
-                .trackInventory(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .publishedAt(OffsetDateTime.now())
+        smartphone = ProductTestDataFactory.aProduct()
+                .withName("Smartphone Pro")
+                .withSku("PHONE-001")
+                .withPrice("899.99")
+                .withCategory(electronicsCategory)
+                .withStock(25)
+                .withReservedStock(0)
+                .withLowStockThreshold(10)
+                .thatIsActive()
                 .build();
+        smartphone.setPublishedAt(OffsetDateTime.now());
         entityManager.persistAndFlush(smartphone);
 
-        tshirt = Product.builder()
-                .name("Cotton T-Shirt")
-                .description("Comfortable cotton t-shirt")
-                .shortDescription("100% cotton casual t-shirt")
-                .sku("TSHIRT-001")
-                .basePrice(new BigDecimal("29.99"))
-                .status(ProductStatus.INACTIVE)
-                .category(clothingCategory)
-                .stockQuantity(0)
-                .reservedQuantity(0)
-                .lowStockThreshold(20)
-                .trackInventory(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        tshirt = ProductTestDataFactory.aProduct()
+                .withName("Cotton T-Shirt")
+                .withSku("TSHIRT-001")
+                .withPrice("29.99")
+                .withCategory(clothingCategory)
+                .withStock(0)
+                .withReservedStock(0)
+                .withLowStockThreshold(20)
+                .thatIsInactive()
                 .build();
         entityManager.persistAndFlush(tshirt);
 
@@ -126,15 +99,12 @@ class ProductRepositoryTest {
     @DisplayName("Should save and find product by ID")
     void shouldSaveAndFindProductById() {
         // Given
-        Product newProduct = Product.builder()
-                .name("Test Product")
-                .description("Test description")
-                .sku("TEST-001")
-                .basePrice(new BigDecimal("99.99"))
-                .status(ProductStatus.ACTIVE)
-                .stockQuantity(5)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        Product newProduct = ProductTestDataFactory.aProduct()
+                .withName("Test Product")
+                .withSku("TEST-001")
+                .withPrice("99.99")
+                .withStock(5)
+                .thatIsActive()
                 .build();
 
         // When

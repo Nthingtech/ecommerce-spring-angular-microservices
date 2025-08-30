@@ -1,6 +1,8 @@
 package com.loiane.ecommerce.product.repository;
 
 import com.loiane.ecommerce.product.entity.Category;
+import com.loiane.ecommerce.product.factory.CategoryTestDataFactory;
+import com.loiane.ecommerce.product.factory.TestDataFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +11,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,81 +36,40 @@ class CategoryRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // Create hierarchical category structure
-        rootCategory = Category.builder()
-                .name("Root")
-                .slug("root")
-                .description("Root category")
-                .level(0)
-                .displayOrder(0)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .build();
+        TestDataFactory.resetCounter();
+
+        // Create hierarchical category structure using factories
+        rootCategory = CategoryTestDataFactory.createRoot("Root");
         entityManager.persistAndFlush(rootCategory);
 
-        electronicsCategory = Category.builder()
-                .name("Electronics")
-                .slug("electronics")
-                .description("Electronic products")
-                .parent(rootCategory)
-                .level(1)
-                .displayOrder(1)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .build();
+        electronicsCategory = CategoryTestDataFactory.createChild("Electronics", rootCategory);
         entityManager.persistAndFlush(electronicsCategory);
 
-        computersCategory = Category.builder()
-                .name("Computers")
-                .slug("computers")
-                .description("Computer products")
-                .parent(electronicsCategory)
-                .level(2)
-                .displayOrder(1)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .build();
+        computersCategory = CategoryTestDataFactory.createChild("Computers", electronicsCategory);
         entityManager.persistAndFlush(computersCategory);
 
-        laptopsCategory = Category.builder()
-                .name("Laptops")
-                .slug("laptops")
-                .description("Laptop computers")
-                .parent(computersCategory)
-                .level(3)
-                .displayOrder(1)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
-                .build();
+        laptopsCategory = CategoryTestDataFactory.createChild("Laptops", computersCategory);
         entityManager.persistAndFlush(laptopsCategory);
 
-        clothingCategory = Category.builder()
-                .name("Clothing")
-                .slug("clothing")
-                .description("Clothing items")
-                .parent(rootCategory)
-                .level(1)
-                .displayOrder(2)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        clothingCategory = CategoryTestDataFactory.aCategory()
+                .withName("Clothing")
+                .withSlug("clothing")
+                .withDescription("Clothing items")
+                .withParent(rootCategory)
+                .withLevel(1)
+                .withDisplayOrder(2)
+                .thatIsActive()
                 .build();
         entityManager.persistAndFlush(clothingCategory);
 
-        menClothingCategory = Category.builder()
-                .name("Men's Clothing")
-                .slug("mens-clothing")
-                .description("Men's clothing items")
-                .parent(clothingCategory)
-                .level(2)
-                .displayOrder(1)
-                .active(false) // Inactive category for testing
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        menClothingCategory = CategoryTestDataFactory.aCategory()
+                .withName("Men's Clothing")
+                .withSlug("mens-clothing")
+                .withDescription("Men's clothing items")
+                .withParent(clothingCategory)
+                .withLevel(2)
+                .withDisplayOrder(1)
+                .thatIsInactive()
                 .build();
         entityManager.persistAndFlush(menClothingCategory);
 
@@ -120,15 +80,10 @@ class CategoryRepositoryTest {
     @DisplayName("Should save and find category by ID")
     void shouldSaveAndFindCategoryById() {
         // Given
-        Category newCategory = Category.builder()
-                .name("Test Category")
-                .slug("test-category")
-                .description("Test description")
-                .level(0)
-                .displayOrder(1)
-                .active(true)
-                .createdAt(OffsetDateTime.now())
-                .updatedAt(OffsetDateTime.now())
+        Category newCategory = CategoryTestDataFactory.aCategory()
+                .withName("Test Category")
+                .withSlug("test-category")
+                .withDescription("Test description")
                 .build();
 
         // When
