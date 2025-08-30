@@ -620,6 +620,8 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
 1. **Test Configuration Fix**: Removed invalid `spring.profiles.active` from `application-test.properties`
 2. **Field Mapping Fix**: Used `findByIsActiveTrue()` instead of `findByActiveTrue()` to match entity field names
 3. **H2 Database Setup**: Configured H2 in-memory database for fast test execution
+4. **JPQL Query Fix**: Replaced `c.children IS NOT EMPTY` with EXISTS subqueries for better Hibernate compatibility
+5. **Test Expectations Fix**: Updated price range test to handle multiple products in range correctly
 
 #### **TDD Phase 3: GREEN Results (✅ COMPLETED)**
 
@@ -631,7 +633,7 @@ mvn test -Dtest="*RepositoryTest"
 
 **Test Results - GREEN Phase ✅**
 ```
-[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 30, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
 [INFO] Total time: 9.318 s
 ```
@@ -639,7 +641,8 @@ mvn test -Dtest="*RepositoryTest"
 **Test Coverage Achieved:**
 - ✅ **ProductRepositoryTest**: 16 test methods - All passing
 - ✅ **CategoryRepositoryTest**: 13 test methods - All passing  
-- ✅ **Total Repository Tests**: 29 tests covering all functionality
+- ✅ **ProductServiceApplicationTests**: 1 integration test - Passing
+- ✅ **Total Repository Tests**: 30 tests covering all functionality
 
 **Key Achievements:**
 - ✅ **Manual Builder Patterns**: Implemented without Lombok dependency
@@ -787,10 +790,12 @@ curl http://localhost:8082/actuator/health
 - ✅ Custom queries working with @Query annotations  
 - ✅ Manual builder patterns implemented (no Lombok)
 - ✅ Active product filtering convenience methods added
-- ✅ 29 repository tests passing with full coverage (including 4 new active filtering tests)
+- ✅ 30 repository tests passing with full coverage (including 4 new active filtering tests)
 - ✅ TDD cycle completed (RED → GREEN → verified)
 - ✅ H2 in-memory database configured for testing
 - ✅ Field mapping issues resolved (isActive vs active)
+- ✅ JPQL query issues resolved (EXISTS vs collection syntax)
+- ✅ Test expectation issues resolved (price range filtering)
 - ✅ Design decision documented (@Where vs convenience methods)
 
 ### **Next: Step 7 - Service Layer**
@@ -798,6 +803,82 @@ curl http://localhost:8082/actuator/health
 - 🔄 Implement CategoryService with hierarchy management  
 - 🔄 Add comprehensive service tests
 - 🔄 Apply validation and error handling
+
+## 🔧 **Troubleshooting Guide**
+
+### **Issue 1: JPQL Collection Syntax Problems**
+**Problem**: CategoryRepository tests failing with Hibernate syntax errors
+```
+Error executing DDL "set client_min_messages = WARNING" via JDBC
+Syntax error in SQL statement
+```
+
+**Root Cause**: JPQL queries using `c.children IS NOT EMPTY` syntax were incompatible with H2 database
+```java
+// ❌ Problematic (collection-based syntax)
+@Query("SELECT DISTINCT c FROM Category c WHERE c.children IS NOT EMPTY")
+List<Category> findCategoriesWithChildren();
+```
+
+**✅ Solution**: Replace with EXISTS subqueries for better Hibernate compatibility
+```java
+// ✅ Fixed (EXISTS subquery syntax)
+@Query("SELECT DISTINCT c FROM Category c WHERE EXISTS (SELECT 1 FROM Category child WHERE child.parent = c)")
+List<Category> findCategoriesWithChildren();
+
+@Query("SELECT c FROM Category c WHERE NOT EXISTS (SELECT 1 FROM Category child WHERE child.parent = c)")
+List<Category> findLeafCategories();
+```
+
+**Why EXISTS is Better**:
+- ✅ Database-agnostic (works with H2, PostgreSQL, MySQL)
+- ✅ More efficient for hierarchy queries
+- ✅ Explicit relationship mapping
+- ✅ Better query optimization by database engines
+
+### **Issue 2: Test Expectation Mismatches**
+**Problem**: `shouldFindActiveProductsByPriceRange` test failing
+```
+Expected size: 1 but was: 2 in:
+[Gaming Laptop ($1299.99), Smartphone Pro ($899.99)]
+```
+
+**Root Cause**: Test data setup created two products in the $800-$1500 range
+- Gaming Laptop: $1299.99 (ACTIVE)
+- Smartphone Pro: $899.99 (ACTIVE)
+
+**✅ Solution**: Update test expectations to match actual data
+```java
+// Before: Assumed only laptop in range
+assertThat(expensiveProducts).hasSize(1);
+assertThat(expensiveProducts.get(0).getName()).isEqualTo("Gaming Laptop");
+
+// After: Accept both products in range
+assertThat(expensiveProducts).hasSize(2);
+assertThat(expensiveProducts)
+    .extracting(Product::getName)
+    .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+```
+
+**Best Practices for Price Range Tests**:
+- ✅ Use precise decimal ranges to avoid overlapping products
+- ✅ Document test data price points in setup methods
+- ✅ Use `containsExactlyInAnyOrder()` for flexible order matching
+- ✅ Test both boundary conditions and typical ranges
+
+### **Issue 3: Slow Test Execution**
+**Problem**: Tests hanging during Spring context initialization
+
+**Root Cause**: PostgreSQL dialect configuration with H2 in-memory database
+```properties
+# Caused conflicts in test environment
+spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+```
+
+**✅ Solution**: Let Spring Boot auto-detect dialect for tests
+- Remove explicit dialect configuration from `application-test.properties`
+- H2 automatically uses correct dialect in test environment
+- Production still uses PostgreSQL explicitly
 
 ## 🚨 **Known Issues**
 

@@ -35,9 +35,9 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
     long countByParent(Category parent);
 
     // Custom queries for hierarchy management
-    @Query("SELECT DISTINCT c FROM Category c WHERE c.children IS NOT EMPTY")
+    @Query("SELECT DISTINCT c FROM Category c WHERE EXISTS (SELECT 1 FROM Category child WHERE child.parent = c)")
     List<Category> findCategoriesWithChildren();
 
-    @Query("SELECT c FROM Category c WHERE c.children IS EMPTY")
+    @Query("SELECT c FROM Category c WHERE NOT EXISTS (SELECT 1 FROM Category child WHERE child.parent = c)")
     List<Category> findLeafCategories();
 }

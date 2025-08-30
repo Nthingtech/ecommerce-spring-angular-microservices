@@ -344,13 +344,16 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("Should find active products by price range")
     void shouldFindActiveProductsByPriceRange() {
-        // When - Looking for products between $800-$1500 (laptop range)
+        // When - Looking for products between $800-$1500 (includes both laptop and phone)
         List<Product> expensiveProducts = productRepository.findActiveProductsByPriceRange(
                 new BigDecimal("800.00"), new BigDecimal("1500.00"));
 
         // Then
-        assertThat(expensiveProducts).hasSize(1);
-        assertThat(expensiveProducts.get(0).getName()).isEqualTo("Gaming Laptop");
-        assertThat(expensiveProducts.get(0).getStatus()).isEqualTo(ProductStatus.ACTIVE);
+        assertThat(expensiveProducts).hasSize(2);
+        assertThat(expensiveProducts)
+                .extracting(Product::getName)
+                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+        assertThat(expensiveProducts)
+                .allMatch(product -> product.getStatus() == ProductStatus.ACTIVE);
     }
 }
