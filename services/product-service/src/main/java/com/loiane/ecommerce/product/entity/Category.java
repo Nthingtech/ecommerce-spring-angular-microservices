@@ -240,4 +240,80 @@ public class Category {
                 ", isActive=" + isActive +
                 '}';
     }
+
+    // Manual Builder Pattern
+    public static CategoryBuilder builder() {
+        return new CategoryBuilder();
+    }
+
+    public static class CategoryBuilder {
+        private String name;
+        private String slug;
+        private String description;
+        private Category parent;
+        private Integer level = 0;
+        private Integer displayOrder = 0;
+        private Boolean active = true;
+        private OffsetDateTime createdAt;
+        private OffsetDateTime updatedAt;
+
+        public CategoryBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public CategoryBuilder slug(String slug) {
+            this.slug = slug;
+            return this;
+        }
+
+        public CategoryBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public CategoryBuilder parent(Category parent) {
+            this.parent = parent;
+            return this;
+        }
+
+        public CategoryBuilder level(Integer level) {
+            this.level = level;
+            return this;
+        }
+
+        public CategoryBuilder displayOrder(Integer displayOrder) {
+            this.displayOrder = displayOrder;
+            return this;
+        }
+
+        public CategoryBuilder active(Boolean active) {
+            this.active = active;
+            return this;
+        }
+
+        public CategoryBuilder createdAt(OffsetDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public CategoryBuilder updatedAt(OffsetDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public Category build() {
+            Category category = new Category();
+            category.name = this.name;
+            category.slug = this.slug;
+            category.description = this.description;
+            category.parent = this.parent;
+            category.level = this.level != null ? this.level : 0;
+            category.displayOrder = this.displayOrder != null ? this.displayOrder : 0;
+            category.isActive = this.active != null ? this.active : Boolean.TRUE;
+            category.createdAt = this.createdAt;
+            category.updatedAt = this.updatedAt;
+            return category;
+        }
+    }
 }

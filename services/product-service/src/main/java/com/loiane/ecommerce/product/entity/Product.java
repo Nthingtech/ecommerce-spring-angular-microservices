@@ -265,4 +265,115 @@ public class Product {
                 ", stockQuantity=" + stockQuantity +
                 '}';
     }
+
+    // Manual Builder Pattern
+    public static ProductBuilder builder() {
+        return new ProductBuilder();
+    }
+
+    public static class ProductBuilder {
+        private String name;
+        private String description;
+        private String shortDescription;
+        private String sku;
+        private BigDecimal basePrice;
+        private ProductStatus status = ProductStatus.ACTIVE;
+        private Category category;
+        private Integer stockQuantity = 0;
+        private Integer reservedQuantity = 0;
+        private Integer lowStockThreshold = 10;
+        private Boolean trackInventory = true;
+        private OffsetDateTime createdAt;
+        private OffsetDateTime updatedAt;
+        private OffsetDateTime publishedAt;
+
+        public ProductBuilder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public ProductBuilder description(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public ProductBuilder shortDescription(String shortDescription) {
+            this.shortDescription = shortDescription;
+            return this;
+        }
+
+        public ProductBuilder sku(String sku) {
+            this.sku = sku;
+            return this;
+        }
+
+        public ProductBuilder basePrice(BigDecimal basePrice) {
+            this.basePrice = basePrice;
+            return this;
+        }
+
+        public ProductBuilder status(ProductStatus status) {
+            this.status = status;
+            return this;
+        }
+
+        public ProductBuilder category(Category category) {
+            this.category = category;
+            return this;
+        }
+
+        public ProductBuilder stockQuantity(Integer stockQuantity) {
+            this.stockQuantity = stockQuantity;
+            return this;
+        }
+
+        public ProductBuilder reservedQuantity(Integer reservedQuantity) {
+            this.reservedQuantity = reservedQuantity;
+            return this;
+        }
+
+        public ProductBuilder lowStockThreshold(Integer lowStockThreshold) {
+            this.lowStockThreshold = lowStockThreshold;
+            return this;
+        }
+
+        public ProductBuilder trackInventory(Boolean trackInventory) {
+            this.trackInventory = trackInventory;
+            return this;
+        }
+
+        public ProductBuilder createdAt(OffsetDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public ProductBuilder updatedAt(OffsetDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public ProductBuilder publishedAt(OffsetDateTime publishedAt) {
+            this.publishedAt = publishedAt;
+            return this;
+        }
+
+        public Product build() {
+            Product product = new Product();
+            product.name = this.name;
+            product.description = this.description;
+            product.shortDescription = this.shortDescription;
+            product.sku = this.sku;
+            product.basePrice = this.basePrice;
+            product.status = this.status != null ? this.status : ProductStatus.ACTIVE;
+            product.category = this.category;
+            product.stockQuantity = this.stockQuantity != null ? this.stockQuantity : 0;
+            product.reservedQuantity = this.reservedQuantity != null ? this.reservedQuantity : 0;
+            product.lowStockThreshold = this.lowStockThreshold != null ? this.lowStockThreshold : 10;
+            product.trackInventory = this.trackInventory != null ? this.trackInventory : Boolean.TRUE;
+            product.createdAt = this.createdAt;
+            product.updatedAt = this.updatedAt;
+            product.publishedAt = this.publishedAt;
+            return product;
+        }
+    }
 }

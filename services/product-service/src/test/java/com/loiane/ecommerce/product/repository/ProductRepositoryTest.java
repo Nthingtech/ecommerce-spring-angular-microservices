@@ -76,7 +76,7 @@ class ProductRepositoryTest {
                 .category(electronicsCategory)
                 .stockQuantity(10)
                 .reservedQuantity(2)
-                .lowStockThreshold(5)
+                .lowStockThreshold(10) // Changed from 5 to 10, so available (8) < threshold (10)
                 .trackInventory(true)
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())

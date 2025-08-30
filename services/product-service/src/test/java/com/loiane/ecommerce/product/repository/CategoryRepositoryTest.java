@@ -216,8 +216,8 @@ class CategoryRepositoryTest {
     @DisplayName("Should find active categories")
     void shouldFindActiveCategories() {
         // When
-        List<Category> activeCategories = categoryRepository.findByActiveTrue();
-        List<Category> inactiveCategories = categoryRepository.findByActiveFalse();
+        List<Category> activeCategories = categoryRepository.findByIsActiveTrue();
+        List<Category> inactiveCategories = categoryRepository.findByIsActiveFalse();
 
         // Then
         assertThat(activeCategories).hasSize(5);
@@ -233,7 +233,7 @@ class CategoryRepositoryTest {
     void shouldFindCategoriesByParentAndActiveOrderByDisplayOrder() {
         // When
         List<Category> activeRootChildren = categoryRepository
-                .findByParentAndActiveTrueOrderByDisplayOrder(rootCategory);
+                .findByParentAndIsActiveTrueOrderByDisplayOrder(rootCategory);
 
         // Then
         assertThat(activeRootChildren).hasSize(2);
@@ -293,7 +293,7 @@ class CategoryRepositoryTest {
         List<Category> categoriesWithChildren = categoryRepository.findCategoriesWithChildren();
 
         // Then
-        assertThat(categoriesWithChildren).hasSize(3);
+        assertThat(categoriesWithChildren).hasSize(4);
         assertThat(categoriesWithChildren).extracting(Category::getName)
                 .containsExactlyInAnyOrder("Root", "Electronics", "Computers", "Clothing");
     }
