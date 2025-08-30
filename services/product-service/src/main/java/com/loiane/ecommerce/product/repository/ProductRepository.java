@@ -32,6 +32,19 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     long countByCategory(Category category);
 
+    // Convenience methods for common use cases (active products)
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE'")
+    List<Product> findActiveProducts();
+
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND p.category = :category")
+    List<Product> findActiveProductsByCategory(Category category);
+
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND UPPER(p.name) LIKE UPPER(CONCAT('%', :name, '%'))")
+    List<Product> findActiveProductsByNameContaining(String name);
+
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND p.basePrice BETWEEN :minPrice AND :maxPrice")
+    List<Product> findActiveProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
+
     // Pagination support
     Page<Product> findByCategoryAndStatus(Category category, ProductStatus status, Pageable pageable);
 

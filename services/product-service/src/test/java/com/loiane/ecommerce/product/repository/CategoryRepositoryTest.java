@@ -172,7 +172,7 @@ class CategoryRepositoryTest {
         // Then
         assertThat(rootCategories).hasSize(1);
         assertThat(rootCategories.get(0).getName()).isEqualTo("Root");
-        assertThat(rootCategories.get(0).getLevel()).isEqualTo(0);
+        assertThat(rootCategories.get(0).getLevel()).isZero();
     }
 
     @Test
@@ -283,7 +283,7 @@ class CategoryRepositoryTest {
         // Then
         assertThat(rootChildrenCount).isEqualTo(2);
         assertThat(electronicsChildrenCount).isEqualTo(1);
-        assertThat(laptopsChildrenCount).isEqualTo(0); // Leaf category
+        assertThat(laptopsChildrenCount).isZero(); // Leaf category
     }
 
     @Test

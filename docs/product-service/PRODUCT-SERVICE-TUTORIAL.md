@@ -12,7 +12,30 @@ Used Spring Initializr to create the initial project structure:
 curl https://start.spring.io/starter.zip \
   -d type=maven-project \
   -d language=java \
-  -d dependencies=web,data-jpa,validation,postgresql,actuator \
+  -d dependencies=web,data-jpa,validation,postg    List<Product> findByNameContainingIgnoreCase(String name);
+    List<Product> findByBasePriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
+    Page<Product> findByCategoryAndStatus(Category category, ProductStatus status, Pageable pageable);
+    
+    // Convenience Methods for Active Products (Common Use Cases)
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE'")
+    List<Product> findActiveProducts();
+    
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND p.category = :category")
+    List<Product> findActiveProductsByCategory(Category category);
+    
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND UPPER(p.name) LIKE UPPER(CONCAT('%', :name, '%'))")
+    List<Product> findActiveProductsByNameContaining(String name);
+    
+    @Query("SELECT p FROM Product p WHERE p.status = 'ACTIVE' AND p.basePrice BETWEEN :minPrice AND :maxPrice")
+    List<Product> findActiveProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice);
+    
+    // Custom Query Methods for Inventory Management
+    @Query("SELECT p FROM Product p WHERE (p.stockQuantity - p.reservedQuantity) <= p.lowStockThreshold AND p.trackInventory = true")
+    List<Product> findProductsWithLowStock();
+    
+    @Query("SELECT p FROM Product p WHERE (p.stockQuantity - p.reservedQuantity) > 0 AND p.trackInventory = true")
+    List<Product> findProductsInStock();
+}tor \
   -d groupId=com.loiane.ecommerce \
   -d artifactId=product-service \
   -d name=product-service \
@@ -150,7 +173,8 @@ logging.level.org.springframework.web=DEBUG
 - ✅ **Database tables created** automatically by Hibernate
 - ✅ **Repository layer implemented** with Test-Driven Development (TDD)
 - ✅ **Manual builder patterns** implemented without Lombok dependency
-- ✅ **25 repository tests** passing with full coverage
+- ✅ **Active product filtering** convenience methods added
+- ✅ **29 repository tests** passing with full coverage
 
 ### **Step 4: Test Database Connection (✅ COMPLETED)**
 
@@ -414,6 +438,7 @@ File: `/src/test/java/com/loiane/ecommerce/product/repository/ProductRepositoryT
 - ✅ **Search Functionality**: Find by name containing (case-insensitive)
 - ✅ **Price Filtering**: Find products by price range
 - ✅ **Pagination Support**: Category and status filtering with pagination
+- ✅ **Active Product Filtering**: Convenience methods for common customer-facing queries
 - ✅ **Business Logic**: Custom queries for inventory and stock management
 
 **Key Test Methods:**
@@ -425,6 +450,10 @@ File: `/src/test/java/com/loiane/ecommerce/product/repository/ProductRepositoryT
 @Test void shouldFindProductsWithLowStock()
 @Test void shouldFindProductsByNameContaining()
 @Test void shouldFindProductsByCategoryAndStatusWithPagination()
+@Test void shouldFindActiveProducts()
+@Test void shouldFindActiveProductsByCategory()
+@Test void shouldFindActiveProductsByNameContaining()
+@Test void shouldFindActiveProductsByPriceRange()
 @Test void shouldFindProductsInStock()
 @Test void shouldCountProductsByCategory()
 @Test void shouldFindProductsByPriceRange()
@@ -602,29 +631,66 @@ mvn test -Dtest="*RepositoryTest"
 
 **Test Results - GREEN Phase ✅**
 ```
-[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0
 [INFO] BUILD SUCCESS
 [INFO] Total time: 9.318 s
 ```
 
 **Test Coverage Achieved:**
-- ✅ **ProductRepositoryTest**: 12 test methods - All passing
+- ✅ **ProductRepositoryTest**: 16 test methods - All passing
 - ✅ **CategoryRepositoryTest**: 13 test methods - All passing  
-- ✅ **Total Repository Tests**: 25 tests covering all functionality
+- ✅ **Total Repository Tests**: 29 tests covering all functionality
 
 **Key Achievements:**
 - ✅ **Manual Builder Patterns**: Implemented without Lombok dependency
 - ✅ **Repository Layer**: Complete Spring Data JPA implementation
 - ✅ **Custom Queries**: Complex business logic with @Query annotations
+- ✅ **Active Product Filtering**: Convenience methods for common use cases
 - ✅ **Field Mapping**: Resolved JPA property name conflicts
 - ✅ **Test Configuration**: H2 in-memory database setup
 - ✅ **TDD Complete**: RED → GREEN → Verified
 
 **Business Logic Implemented:**
 - **Product Inventory**: Low stock detection based on available quantity vs threshold
+- **Active Product Filtering**: Optimized queries for customer-facing APIs
 - **Category Hierarchy**: Parent-child relationships with tree operations
 - **Search & Filtering**: Case-insensitive search, status filtering, price ranges
 - **Data Integrity**: Unique constraints (SKU, slug), validation support
+
+#### **Design Decision: Active Product Filtering**
+
+**🤔 Alternative Considered: @Where Annotation**
+We considered using Hibernate's `@Where(clause = "status = 'ACTIVE'")` on the Product entity but chose **convenience methods** instead.
+
+**Why Convenience Methods Over @Where:**
+
+✅ **Business Flexibility**
+- Admin panels need access to INACTIVE/DISCONTINUED products
+- Inventory management requires all product statuses
+- Analytics needs historical data from all statuses
+
+✅ **API Transparency**
+- Clear method names indicate filtering behavior
+- Frontend developers understand what data they receive
+- No hidden database-level filtering
+
+✅ **Testing Benefits**
+- Tests can create products with various statuses
+- Repository behavior is explicit and predictable
+
+**Convenience Methods Added:**
+```java
+// Common customer-facing queries
+List<Product> findActiveProducts()
+List<Product> findActiveProductsByCategory(Category category)
+List<Product> findActiveProductsByNameContaining(String name)
+List<Product> findActiveProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice)
+```
+
+**Usage Strategy:**
+- **Customer APIs**: Use convenience methods for performance
+- **Admin APIs**: Use general methods for full data access
+- **Service Layer**: Choose appropriate method based on use case
 
 #### **Current Repository Status: ✅ FULLY COMPLETE**
 
@@ -720,10 +786,12 @@ curl http://localhost:8082/actuator/health
 - ✅ Repository interfaces implemented with Spring Data JPA
 - ✅ Custom queries working with @Query annotations  
 - ✅ Manual builder patterns implemented (no Lombok)
-- ✅ 25 repository tests passing with full coverage
+- ✅ Active product filtering convenience methods added
+- ✅ 29 repository tests passing with full coverage (including 4 new active filtering tests)
 - ✅ TDD cycle completed (RED → GREEN → verified)
 - ✅ H2 in-memory database configured for testing
 - ✅ Field mapping issues resolved (isActive vs active)
+- ✅ Design decision documented (@Where vs convenience methods)
 
 ### **Next: Step 7 - Service Layer**
 - 🔄 Implement ProductService with business logic

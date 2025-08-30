@@ -298,4 +298,59 @@ class ProductRepositoryTest {
         assertThat(existingSku).isTrue();
         assertThat(nonExistentSku).isFalse();
     }
+
+    @Test
+    @DisplayName("Should find all active products")
+    void shouldFindActiveProducts() {
+        // When
+        List<Product> activeProducts = productRepository.findActiveProducts();
+
+        // Then
+        assertThat(activeProducts).hasSize(2); // laptop and smartphone are active
+        assertThat(activeProducts).extracting(Product::getName)
+                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+        assertThat(activeProducts).allMatch(p -> p.getStatus() == ProductStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("Should find active products by category")
+    void shouldFindActiveProductsByCategory() {
+        // When
+        List<Product> activeElectronics = productRepository.findActiveProductsByCategory(electronicsCategory);
+        List<Product> activeClothing = productRepository.findActiveProductsByCategory(clothingCategory);
+
+        // Then
+        assertThat(activeElectronics).hasSize(2);
+        assertThat(activeElectronics).extracting(Product::getName)
+                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+
+        assertThat(activeClothing).isEmpty(); // tshirt is INACTIVE
+    }
+
+    @Test
+    @DisplayName("Should find active products by name containing")
+    void shouldFindActiveProductsByNameContaining() {
+        // When
+        List<Product> laptopProducts = productRepository.findActiveProductsByNameContaining("laptop");
+        List<Product> shirtProducts = productRepository.findActiveProductsByNameContaining("shirt");
+
+        // Then
+        assertThat(laptopProducts).hasSize(1);
+        assertThat(laptopProducts.get(0).getName()).isEqualTo("Gaming Laptop");
+
+        assertThat(shirtProducts).isEmpty(); // tshirt is INACTIVE, won't be found
+    }
+
+    @Test
+    @DisplayName("Should find active products by price range")
+    void shouldFindActiveProductsByPriceRange() {
+        // When - Looking for products between $800-$1500 (laptop range)
+        List<Product> expensiveProducts = productRepository.findActiveProductsByPriceRange(
+                new BigDecimal("800.00"), new BigDecimal("1500.00"));
+
+        // Then
+        assertThat(expensiveProducts).hasSize(1);
+        assertThat(expensiveProducts.get(0).getName()).isEqualTo("Gaming Laptop");
+        assertThat(expensiveProducts.get(0).getStatus()).isEqualTo(ProductStatus.ACTIVE);
+    }
 }
