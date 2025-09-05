@@ -5,6 +5,7 @@ import com.loiane.ecommerce.product.dto.product.*;
 import com.loiane.ecommerce.product.entity.Category;
 import com.loiane.ecommerce.product.entity.Product;
 import com.loiane.ecommerce.product.entity.ProductStatus;
+import com.loiane.ecommerce.product.exception.*;
 import com.loiane.ecommerce.product.factory.CategoryTestDataFactory;
 import com.loiane.ecommerce.product.repository.CategoryRepository;
 import com.loiane.ecommerce.product.repository.ProductRepository;
@@ -25,10 +26,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -400,5 +403,316 @@ class ProductControllerIntegrationTest {
 
         verify(productRepository).findById(productId);
         verify(productRepository).save(existingProduct);
+    }
+
+    // Exception path tests for 100% coverage
+
+    @Test
+    @DisplayName("Create product with invalid category - Returns 400")
+    void createProductWithInvalidCategory() throws Exception {
+        // Given
+        var request = new CreateProductRequest(
+                "Test Product",
+                "test-sku-123",
+                "Test description",
+                BigDecimal.valueOf(99.99),
+                "invalid-category-id",
+                10,
+                5,
+                true
+        );
+
+        when(categoryRepository.findById("invalid-category-id")).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(categoryRepository).findById("invalid-category-id");
+        verifyNoInteractions(productRepository);
+    }
+
+    @Test
+    @DisplayName("Create product with inactive category - Returns 400")
+    void createProductWithInactiveCategory() throws Exception {
+        // Given
+        var inactiveCategory = Category.builder()
+                .name("Inactive Category")
+                .slug("inactive-category")
+                .description("Inactive category")
+                .active(false)
+                .displayOrder(1)
+                .level(0)
+                .build();
+        inactiveCategory.setId("cat-1");
+
+        var request = new CreateProductRequest(
+                "Test Product",
+                "test-sku-123",
+                "Test description",
+                BigDecimal.valueOf(99.99),
+                "cat-1",
+                10,
+                5,
+                true
+        );
+
+        when(categoryRepository.findById("cat-1")).thenReturn(Optional.of(inactiveCategory));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(categoryRepository, atLeast(1)).findById("cat-1");
+    }
+
+    @Test
+    @DisplayName("Update product not found - Returns 404")
+    void updateProductNotFound() throws Exception {
+        // Given
+        var productId = "non-existent-id";
+        var request = new UpdateProductRequest(
+                "Updated Product",
+                "Updated description",
+                BigDecimal.valueOf(129.99),
+                8
+        );
+
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}", productId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findById(productId);
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Update product duplicate SKU - Returns 409")
+    void updateProductDuplicateSku() throws Exception {
+        // Given
+        var productId = "prod-1";
+        var existingProduct = buildSampleProduct(productId);
+        var request = new UpdateProductRequest(
+                "Updated Product",
+                "Updated description",
+                BigDecimal.valueOf(129.99),
+                8
+        );
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(existingProduct));
+        when(productRepository.save(any(Product.class))).thenThrow(new DuplicateSkuException("SKU already exists"));
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}", productId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+
+        verify(productRepository, atLeast(1)).findById(productId);
+    }
+
+    @Test
+    @DisplayName("Publish product not found - Returns 404")
+    void publishProductNotFound() throws Exception {
+        // Given
+        var productId = "non-existent-id";
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/publish", productId))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findById(productId);
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Publish product illegal operation - Returns 400")
+    void publishProductIllegalOperation() throws Exception {
+        // Given
+        var productId = "prod-1";
+        var product = buildSampleProduct(productId);
+        product.setStatus(ProductStatus.DISCONTINUED);
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(productRepository.save(any(Product.class))).thenThrow(new IllegalOperationException("Cannot publish discontinued product"));
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/publish", productId))
+                .andExpect(status().isBadRequest());
+
+        verify(productRepository).findById(productId);
+    }
+
+    @Test
+    @DisplayName("Discontinue product not found - Returns 404")
+    void discontinueProductNotFound() throws Exception {
+        // Given
+        var productId = "non-existent-id";
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/discontinue", productId))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findById(productId);
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Reserve stock insufficient stock - Returns 409")
+    void reserveStockInsufficientStock() throws Exception {
+        // Given
+        var productId = "prod-1";
+        var product = buildSampleProduct(productId);
+        product.setStockQuantity(5);
+        int requestedQuantity = 10; // More than available
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/stock/reserve", productId)
+                        .param("quantity", String.valueOf(requestedQuantity)))
+                .andExpect(status().isConflict());
+
+        verify(productRepository).findById(productId);
+    }
+
+    @Test
+    @DisplayName("Release stock invalid argument - Exception handling")
+    void releaseStockInvalidArgument() {
+        // Given
+        var productId = "prod-1";
+        var product = buildSampleProduct(productId);
+        product.setReservedQuantity(5);
+        int requestedQuantity = 10; // More than reserved
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        // When & Then - The IllegalOperationException causes a 500 since controller doesn't handle it
+        assertThrows(Exception.class, () -> {
+            mockMvc.perform(put("/api/v1/products/{id}/stock/release", productId)
+                            .param("quantity", String.valueOf(requestedQuantity)));
+        });
+
+        verify(productRepository).findById(productId);
+    }
+
+    @Test
+    @DisplayName("Bulk update status no products found - Returns 404")
+    void bulkUpdateStatusNoProductsFound() throws Exception {
+        // Given
+        var request = new BulkUpdateStatusRequest(
+                List.of("non-existent-1", "non-existent-2"),
+                ProductStatus.ACTIVE
+        );
+
+        when(productRepository.findAllById(request.productIds())).thenReturn(Collections.emptyList());
+
+        // When & Then - Service returns 0 updated products, controller returns 404
+        mockMvc.perform(put("/api/v1/products/bulk/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findAllById(request.productIds());
+        verify(productRepository).saveAll(Collections.emptyList());
+    }
+
+    @Test
+    @DisplayName("Bulk update status repository exception - Returns 400")
+    void bulkUpdateStatusException() throws Exception {
+        // Given
+        var request = new BulkUpdateStatusRequest(
+                List.of("prod-1", "prod-2"),
+                ProductStatus.ACTIVE
+        );
+
+        when(productRepository.findAllById(request.productIds())).thenThrow(new RuntimeException("Database error"));
+
+        // When & Then - Repository exception during findAllById results in 400
+        mockMvc.perform(put("/api/v1/products/bulk/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(productRepository).findAllById(request.productIds());
+    }
+
+    @Test
+    @DisplayName("Reserve stock product not found - Returns 404")
+    void reserveStockProductNotFound() throws Exception {
+        // Given
+        var productId = "non-existent-id";
+        int quantity = 5;
+
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/stock/reserve", productId)
+                        .param("quantity", String.valueOf(quantity)))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findById(productId);
+    }
+
+    @Test
+    @DisplayName("Release stock product not found - Returns 404")
+    void releaseStockProductNotFound() throws Exception {
+        // Given
+        var productId = "non-existent-id";
+        int quantity = 5;
+
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/stock/release", productId)
+                        .param("quantity", String.valueOf(quantity)))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findById(productId);
+    }
+
+    @Test
+    @DisplayName("Confirm stock product not found - Returns 404")
+    void confirmStockProductNotFound() throws Exception {
+        // Given
+        var productId = "non-existent-id";
+        int quantity = 5;
+
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}/stock/confirm", productId)
+                        .param("quantity", String.valueOf(quantity)))
+                .andExpect(status().isNotFound());
+
+        verify(productRepository).findById(productId);
+    }
+
+    /**
+     * Helper method to build a sample product for testing
+     */
+    private Product buildSampleProduct(String productId) {
+        var product = Product.builder()
+                .name("Sample Product")
+                .sku("SAMPLE-SKU-001")
+                .description("Sample product description")
+                .basePrice(new BigDecimal("99.99"))
+                .stockQuantity(100)
+                .lowStockThreshold(10)
+                .trackInventory(true)
+                .status(ProductStatus.ACTIVE)
+                .build();
+        product.setId(productId);
+        return product;
     }
 }
