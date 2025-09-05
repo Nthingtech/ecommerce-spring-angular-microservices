@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerce_product_db
+    environment:
+      POSTGRES_DB: ecommerce_product
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ecommerce-network
+
+  product-service:
+    build: .
+    container_name: product-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/ecommerce_product
+      DB_USERNAME: ecommerce
+      DB_PASSWORD: password123
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+    networks:
+      - ecommerce-network
+
+volumes:
+  postgres_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
