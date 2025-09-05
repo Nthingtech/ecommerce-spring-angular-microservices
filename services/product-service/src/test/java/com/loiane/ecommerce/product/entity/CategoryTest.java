@@ -13,6 +13,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Category Entity Tests")
 class CategoryTest {
 
+    // Test data constants
+    private static final String TEST_ID = "test-id";
+    private static final String TEST_CATEGORY_NAME = "Test Category";
+    private static final String TEST_CATEGORY_SLUG = "test-category";
+
     private Category category;
     private Category parentCategory;
 
@@ -46,8 +51,8 @@ class CategoryTest {
         @DisplayName("Should create category with name and slug")
         void shouldCreateCategoryWithNameAndSlug() {
             // Given
-            String name = "Test Category";
-            String slug = "test-category";
+            String name = TEST_CATEGORY_NAME;
+            String slug = TEST_CATEGORY_SLUG;
 
             // When
             Category testCategory = new Category(name, slug);
@@ -277,7 +282,7 @@ class CategoryTest {
         @DisplayName("Should generate hash code")
         void shouldGenerateHashCode() {
             // Given
-            category.setId("test-id");
+            category.setId(TEST_ID);
 
             // When
             int hashCode = category.hashCode();
@@ -290,8 +295,8 @@ class CategoryTest {
         @DisplayName("Should generate string representation")
         void shouldGenerateStringRepresentation() {
             // Given
-            category.setId("test-id");
-            category.setName("Test Category");
+            category.setId(TEST_ID);
+            category.setName(TEST_CATEGORY_NAME);
 
             // When
             String toString = category.toString();
@@ -299,8 +304,8 @@ class CategoryTest {
             // Then
             assertThat(toString)
                     .contains("Category")
-                    .contains("test-id")
-                    .contains("Test Category");
+                    .contains(TEST_ID)
+                    .contains(TEST_CATEGORY_NAME);
         }
     }
 

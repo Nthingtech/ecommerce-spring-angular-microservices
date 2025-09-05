@@ -13,6 +13,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Product Entity Tests")
 class ProductTest {
 
+    // Test data constants
+    private static final String TEST_ID = "test-id";
+    private static final String TEST_PRODUCT_NAME = "Test Product";
+    private static final String TEST_SKU = "TEST-001";
+
     private Product product;
     private Category category;
 
@@ -24,8 +29,8 @@ class ProductTest {
                 .build();
 
         product = Product.builder()
-                .name("Test Product")
-                .sku("TEST-001")
+                .name(TEST_PRODUCT_NAME)
+                .sku(TEST_SKU)
                 .basePrice(new BigDecimal("99.99"))
                 .status(ProductStatus.ACTIVE)
                 .category(category)
@@ -44,7 +49,7 @@ class ProductTest {
         @DisplayName("Should create product with basic fields")
         void shouldCreateProductWithBasicFields() {
             // Given
-            String name = "Test Product";
+            String name = TEST_PRODUCT_NAME;
             String sku = "TEST-SKU-001";
             BigDecimal price = new BigDecimal("49.99");
 
@@ -310,7 +315,7 @@ class ProductTest {
         @DisplayName("Should generate hash code")
         void shouldGenerateHashCode() {
             // Given
-            product.setId("test-id");
+            product.setId(TEST_ID);
 
             // When
             int hashCode = product.hashCode();
@@ -323,8 +328,8 @@ class ProductTest {
         @DisplayName("Should generate string representation")
         void shouldGenerateStringRepresentation() {
             // Given
-            product.setId("test-id");
-            product.setName("Test Product");
+            product.setId(TEST_ID);
+            product.setName(TEST_PRODUCT_NAME);
 
             // When
             String toString = product.toString();
@@ -332,8 +337,8 @@ class ProductTest {
             // Then
             assertThat(toString)
                     .contains("Product")
-                    .contains("test-id")
-                    .contains("Test Product");
+                    .contains(TEST_ID)
+                    .contains(TEST_PRODUCT_NAME);
         }
     }
 

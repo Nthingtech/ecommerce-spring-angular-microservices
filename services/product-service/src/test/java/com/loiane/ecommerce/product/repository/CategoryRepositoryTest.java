@@ -21,6 +21,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Category Repository Tests")
 class CategoryRepositoryTest {
 
+    // Test data constants
+    private static final String ROOT_CATEGORY_NAME = "Root";
+    private static final String ELECTRONICS_CATEGORY_NAME = "Electronics";
+    private static final String COMPUTERS_CATEGORY_NAME = "Computers";
+    private static final String LAPTOPS_CATEGORY_NAME = "Laptops";
+    private static final String CLOTHING_CATEGORY_NAME = "Clothing";
+    private static final String MENS_CLOTHING_CATEGORY_NAME = "Men's Clothing";
+    private static final String ELECTRONICS_SLUG = "electronics";
+    private static final String CLOTHING_SLUG = "clothing";
+    private static final String MENS_CLOTHING_SLUG = "mens-clothing";
+
     @Autowired
     private TestEntityManager entityManager;
 
@@ -39,21 +50,21 @@ class CategoryRepositoryTest {
         TestDataFactory.resetCounter();
 
         // Create hierarchical category structure using factories
-        rootCategory = CategoryTestDataFactory.createRoot("Root");
+        rootCategory = CategoryTestDataFactory.createRoot(ROOT_CATEGORY_NAME);
         entityManager.persistAndFlush(rootCategory);
 
-        electronicsCategory = CategoryTestDataFactory.createChild("Electronics", rootCategory);
+        electronicsCategory = CategoryTestDataFactory.createChild(ELECTRONICS_CATEGORY_NAME, rootCategory);
         entityManager.persistAndFlush(electronicsCategory);
 
-        computersCategory = CategoryTestDataFactory.createChild("Computers", electronicsCategory);
+        computersCategory = CategoryTestDataFactory.createChild(COMPUTERS_CATEGORY_NAME, electronicsCategory);
         entityManager.persistAndFlush(computersCategory);
 
-        laptopsCategory = CategoryTestDataFactory.createChild("Laptops", computersCategory);
+        laptopsCategory = CategoryTestDataFactory.createChild(LAPTOPS_CATEGORY_NAME, computersCategory);
         entityManager.persistAndFlush(laptopsCategory);
 
         clothingCategory = CategoryTestDataFactory.aCategory()
-                .withName("Clothing")
-                .withSlug("clothing")
+                .withName(CLOTHING_CATEGORY_NAME)
+                .withSlug(CLOTHING_SLUG)
                 .withDescription("Clothing items")
                 .withParent(rootCategory)
                 .withLevel(1)
@@ -63,8 +74,8 @@ class CategoryRepositoryTest {
         entityManager.persistAndFlush(clothingCategory);
 
         menClothingCategory = CategoryTestDataFactory.aCategory()
-                .withName("Men's Clothing")
-                .withSlug("mens-clothing")
+                .withName(MENS_CLOTHING_CATEGORY_NAME)
+                .withSlug(MENS_CLOTHING_SLUG)
                 .withDescription("Men's clothing items")
                 .withParent(clothingCategory)
                 .withLevel(2)
@@ -100,12 +111,12 @@ class CategoryRepositoryTest {
     @DisplayName("Should find category by slug")
     void shouldFindCategoryBySlug() {
         // When
-        Optional<Category> foundCategory = categoryRepository.findBySlug("electronics");
+        Optional<Category> foundCategory = categoryRepository.findBySlug(ELECTRONICS_SLUG);
 
         // Then
         assertThat(foundCategory).isPresent();
-        assertThat(foundCategory.get().getName()).isEqualTo("Electronics");
-        assertThat(foundCategory.get().getParent().getName()).isEqualTo("Root");
+        assertThat(foundCategory.get().getName()).isEqualTo(ELECTRONICS_CATEGORY_NAME);
+        assertThat(foundCategory.get().getParent().getName()).isEqualTo(ROOT_CATEGORY_NAME);
     }
 
     @Test
@@ -126,7 +137,7 @@ class CategoryRepositoryTest {
 
         // Then
         assertThat(rootCategories).hasSize(1);
-        assertThat(rootCategories.get(0).getName()).isEqualTo("Root");
+        assertThat(rootCategories.get(0).getName()).isEqualTo(ROOT_CATEGORY_NAME);
         assertThat(rootCategories.get(0).getLevel()).isZero();
     }
 
@@ -140,10 +151,10 @@ class CategoryRepositoryTest {
         // Then
         assertThat(rootChildren).hasSize(2);
         assertThat(rootChildren).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Electronics", "Clothing");
+                .containsExactlyInAnyOrder(ELECTRONICS_CATEGORY_NAME, CLOTHING_CATEGORY_NAME);
 
         assertThat(electronicsChildren).hasSize(1);
-        assertThat(electronicsChildren.get(0).getName()).isEqualTo("Computers");
+        assertThat(electronicsChildren.get(0).getName()).isEqualTo(COMPUTERS_CATEGORY_NAME);
     }
 
     @Test
@@ -156,15 +167,15 @@ class CategoryRepositoryTest {
 
         // Then
         assertThat(level0Categories).hasSize(1);
-        assertThat(level0Categories.get(0).getName()).isEqualTo("Root");
+        assertThat(level0Categories.get(0).getName()).isEqualTo(ROOT_CATEGORY_NAME);
 
         assertThat(level1Categories).hasSize(2);
         assertThat(level1Categories).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Electronics", "Clothing");
+                .containsExactlyInAnyOrder(ELECTRONICS_CATEGORY_NAME, CLOTHING_CATEGORY_NAME);
 
         assertThat(level2Categories).hasSize(2);
         assertThat(level2Categories).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Computers", "Men's Clothing");
+                .containsExactlyInAnyOrder(COMPUTERS_CATEGORY_NAME, MENS_CLOTHING_CATEGORY_NAME);
     }
 
     @Test
@@ -177,10 +188,10 @@ class CategoryRepositoryTest {
         // Then
         assertThat(activeCategories).hasSize(5);
         assertThat(activeCategories).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Root", "Electronics", "Computers", "Laptops", "Clothing");
+                .containsExactlyInAnyOrder(ROOT_CATEGORY_NAME, ELECTRONICS_CATEGORY_NAME, COMPUTERS_CATEGORY_NAME, LAPTOPS_CATEGORY_NAME, CLOTHING_CATEGORY_NAME);
 
         assertThat(inactiveCategories).hasSize(1);
-        assertThat(inactiveCategories.get(0).getName()).isEqualTo("Men's Clothing");
+        assertThat(inactiveCategories.get(0).getName()).isEqualTo(MENS_CLOTHING_CATEGORY_NAME);
     }
 
     @Test
@@ -192,8 +203,8 @@ class CategoryRepositoryTest {
 
         // Then
         assertThat(activeRootChildren).hasSize(2);
-        assertThat(activeRootChildren.get(0).getName()).isEqualTo("Electronics"); // displayOrder = 1
-        assertThat(activeRootChildren.get(1).getName()).isEqualTo("Clothing");    // displayOrder = 2
+        assertThat(activeRootChildren.get(0).getName()).isEqualTo(ELECTRONICS_CATEGORY_NAME); // displayOrder = 1
+        assertThat(activeRootChildren.get(1).getName()).isEqualTo(CLOTHING_CATEGORY_NAME);    // displayOrder = 2
     }
 
     @Test
@@ -207,10 +218,10 @@ class CategoryRepositoryTest {
         // Then
         assertThat(clothingResults).hasSize(2);
         assertThat(clothingResults).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Clothing", "Men's Clothing");
+                .containsExactlyInAnyOrder(CLOTHING_CATEGORY_NAME, MENS_CLOTHING_CATEGORY_NAME);
 
         assertThat(computerResults).hasSize(1);
-        assertThat(computerResults.get(0).getName()).isEqualTo("Computers");
+        assertThat(computerResults.get(0).getName()).isEqualTo(COMPUTERS_CATEGORY_NAME);
 
         assertThat(emptyResults).isEmpty();
     }
@@ -219,7 +230,7 @@ class CategoryRepositoryTest {
     @DisplayName("Should check if slug exists")
     void shouldCheckIfSlugExists() {
         // When
-        boolean existingSlug = categoryRepository.existsBySlug("electronics");
+        boolean existingSlug = categoryRepository.existsBySlug(ELECTRONICS_SLUG);
         boolean nonExistentSlug = categoryRepository.existsBySlug("non-existent");
 
         // Then
@@ -250,7 +261,7 @@ class CategoryRepositoryTest {
         // Then
         assertThat(categoriesWithChildren).hasSize(4);
         assertThat(categoriesWithChildren).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Root", "Electronics", "Computers", "Clothing");
+                .containsExactlyInAnyOrder(ROOT_CATEGORY_NAME, ELECTRONICS_CATEGORY_NAME, COMPUTERS_CATEGORY_NAME, CLOTHING_CATEGORY_NAME);
     }
 
     @Test
@@ -262,6 +273,6 @@ class CategoryRepositoryTest {
         // Then
         assertThat(leafCategories).hasSize(2);
         assertThat(leafCategories).extracting(Category::getName)
-                .containsExactlyInAnyOrder("Laptops", "Men's Clothing");
+                .containsExactlyInAnyOrder(LAPTOPS_CATEGORY_NAME, MENS_CLOTHING_CATEGORY_NAME);
     }
 }

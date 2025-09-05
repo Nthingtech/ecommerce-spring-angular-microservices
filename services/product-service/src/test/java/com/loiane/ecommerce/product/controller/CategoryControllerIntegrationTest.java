@@ -95,7 +95,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("GET /api/v1/categories/{slug} - Should return category when found")
-    void testGetCategoryBySlug_Success() throws Exception {
+    void testGetCategoryBySlugSuccess() throws Exception {
         // Given
         when(categoryService.findBySlug("electronics")).thenReturn(rootCategoryEntity);
 
@@ -114,7 +114,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("GET /api/v1/categories/{slug} - Should return 404 when category not found")
-    void testGetCategoryBySlug_NotFound() throws Exception {
+    void testGetCategoryBySlugNotFound() throws Exception {
         // Given
         when(categoryService.findBySlug("nonexistent")).thenThrow(new CategoryNotFoundException("Category not found"));
 
@@ -127,7 +127,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("POST /api/v1/categories - Should create category successfully")
-    void testCreateCategory_Success() throws Exception {
+    void testCreateCategorySuccess() throws Exception {
         // Given
         CreateCategoryRequest request = CategoryDTOTestFactory.createValidCreateRequest();
         Category savedCategory = CategoryTestDataFactory.createRoot(request.name());
@@ -152,7 +152,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("POST /api/v1/categories - Should return 409 when slug already exists")
-    void testCreateCategory_SlugExists() throws Exception {
+    void testCreateCategorySlugExists() throws Exception {
         // Given
         CreateCategoryRequest request = CategoryDTOTestFactory.createValidCreateRequest();
         when(categoryService.createCategory(any(Category.class))).thenThrow(new DuplicateSlugException("Slug already exists"));
@@ -170,7 +170,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("POST /api/v1/categories - Should return 400 for invalid request")
-    void testCreateCategory_InvalidRequest() throws Exception {
+    void testCreateCategoryInvalidRequest() throws Exception {
         // Given - request with blank name and slug (using constructor directly)
         CreateCategoryRequest invalidRequest = new CreateCategoryRequest("", "", "", null, null);
         String requestJson = objectMapper.writeValueAsString(invalidRequest);
@@ -186,7 +186,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("PUT /api/v1/categories/{id} - Should update category successfully")
-    void testUpdateCategory_Success() throws Exception {
+    void testUpdateCategorySuccess() throws Exception {
         // Given
         UpdateCategoryRequest request = CategoryDTOTestFactory.createValidUpdateRequest();
         Category updatedCategory = CategoryTestDataFactory.createRoot("Updated Category");
@@ -215,7 +215,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("PUT /api/v1/categories/{id} - Should return 404 when category not found")
-    void testUpdateCategory_NotFound() throws Exception {
+    void testUpdateCategoryNotFound() throws Exception {
         // Given
         UpdateCategoryRequest request = CategoryDTOTestFactory.createValidUpdateRequest();
         when(categoryService.findById(nonExistentId)).thenThrow(new CategoryNotFoundException("Category not found"));
@@ -234,7 +234,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("DELETE /api/v1/categories/{id} - Should delete category successfully")
-    void testDeleteCategory_Success() throws Exception {
+    void testDeleteCategorySuccess() throws Exception {
         // Given
         when(categoryService.findById(rootCategoryId)).thenReturn(rootCategoryEntity);
         when(categoryService.countActiveProductsInCategory(rootCategoryId)).thenReturn(0L);
@@ -251,7 +251,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("DELETE /api/v1/categories/{id} - Should return 409 when category has active products")
-    void testDeleteCategory_HasActiveProducts() throws Exception {
+    void testDeleteCategoryHasActiveProducts() throws Exception {
         // Given
         when(categoryService.findById(rootCategoryId)).thenReturn(rootCategoryEntity);
         when(categoryService.countActiveProductsInCategory(rootCategoryId)).thenReturn(5L);
@@ -267,7 +267,7 @@ class CategoryControllerIntegrationTest {
 
     @Test
     @DisplayName("DELETE /api/v1/categories/{id} - Should return 404 when category not found")
-    void testDeleteCategory_NotFound() throws Exception {
+    void testDeleteCategoryNotFound() throws Exception {
         // Given
         when(categoryService.findById(nonExistentId)).thenThrow(new CategoryNotFoundException("Category not found"));
 

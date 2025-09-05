@@ -105,7 +105,7 @@ public class CategoryDTOTestFactory {
                 .replaceAll("[^a-z0-9\\s-]", "")
                 .replaceAll("\\s+", "-")
                 .replaceAll("-+", "-")
-                .replaceAll("^-|-$", "");
+                .replaceAll("(^-|-$)", "");
     }
     
     public static void resetCounter() {

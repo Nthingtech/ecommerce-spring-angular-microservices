@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class TestDataFactory {
     
     private static final AtomicInteger counter = new AtomicInteger(0);
-    
+
     /**
      * Generates a unique integer for use in test data.
      * Useful for creating unique SKUs, names, etc.

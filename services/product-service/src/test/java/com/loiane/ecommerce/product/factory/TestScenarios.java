@@ -14,6 +14,11 @@ import java.util.List;
  */
 public class TestScenarios {
     
+    // Price tier constants
+    private static final String BUDGET_TIER = "BUDGET";
+    private static final String MID_TIER = "MID";
+    private static final String PREMIUM_TIER = "PREMIUM";
+    
     private TestScenarios() {
         // Static factory class
     }
@@ -138,19 +143,19 @@ public class TestScenarios {
         List<Product> products = new ArrayList<>();
         
         // Budget products (< $50)
-        products.add(createProductWithPrice(category, "29.99", "BUDGET"));
-        products.add(createProductWithPrice(category, "39.99", "BUDGET"));
-        products.add(createProductWithPrice(category, "49.99", "BUDGET"));
+        products.add(createProductWithPrice(category, "29.99", BUDGET_TIER));
+        products.add(createProductWithPrice(category, "39.99", BUDGET_TIER));
+        products.add(createProductWithPrice(category, "49.99", BUDGET_TIER));
         
         // Mid-range products ($50 - $200)
-        products.add(createProductWithPrice(category, "99.99", "MID"));
-        products.add(createProductWithPrice(category, "149.99", "MID"));
-        products.add(createProductWithPrice(category, "199.99", "MID"));
+        products.add(createProductWithPrice(category, "99.99", MID_TIER));
+        products.add(createProductWithPrice(category, "149.99", MID_TIER));
+        products.add(createProductWithPrice(category, "199.99", MID_TIER));
         
         // Premium products (> $200)
-        products.add(createProductWithPrice(category, "299.99", "PREMIUM"));
-        products.add(createProductWithPrice(category, "499.99", "PREMIUM"));
-        products.add(createProductWithPrice(category, "999.99", "PREMIUM"));
+        products.add(createProductWithPrice(category, "299.99", PREMIUM_TIER));
+        products.add(createProductWithPrice(category, "499.99", PREMIUM_TIER));
+        products.add(createProductWithPrice(category, "999.99", PREMIUM_TIER));
         
         return new PriceRangeScenario(products);
     }

@@ -29,6 +29,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Product Repository Tests")
 class ProductRepositoryTest {
 
+    // Test data constants
+    private static final String COTTON_TSHIRT_NAME = "Cotton T-Shirt";
+    private static final String GAMING_LAPTOP_NAME = "Gaming Laptop";
+    private static final String SMARTPHONE_PRO_NAME = "Smartphone Pro";
+
     @Autowired
     private TestEntityManager entityManager;
 
@@ -55,7 +60,7 @@ class ProductRepositoryTest {
 
         // Create test products using factory
         laptop = ProductTestDataFactory.aProduct()
-                .withName("Gaming Laptop")
+                .withName(GAMING_LAPTOP_NAME)
                 .withSku("LAPTOP-001")
                 .withPrice("1299.99")
                 .withCategory(electronicsCategory)
@@ -68,7 +73,7 @@ class ProductRepositoryTest {
         entityManager.persistAndFlush(laptop);
 
         smartphone = ProductTestDataFactory.aProduct()
-                .withName("Smartphone Pro")
+                .withName(SMARTPHONE_PRO_NAME)
                 .withSku("PHONE-001")
                 .withPrice("899.99")
                 .withCategory(electronicsCategory)
@@ -81,7 +86,7 @@ class ProductRepositoryTest {
         entityManager.persistAndFlush(smartphone);
 
         tshirt = ProductTestDataFactory.aProduct()
-                .withName("Cotton T-Shirt")
+                .withName(COTTON_TSHIRT_NAME)
                 .withSku("TSHIRT-001")
                 .withPrice("29.99")
                 .withCategory(clothingCategory)
@@ -126,7 +131,7 @@ class ProductRepositoryTest {
 
         // Then
         assertThat(foundProduct).isPresent();
-        assertThat(foundProduct.get().getName()).isEqualTo("Gaming Laptop");
+        assertThat(foundProduct.get().getName()).isEqualTo(GAMING_LAPTOP_NAME);
         assertThat(foundProduct.get().getCategory().getName()).isEqualTo("Electronics");
     }
 
@@ -150,10 +155,10 @@ class ProductRepositoryTest {
         // Then
         assertThat(activeProducts).hasSize(2);
         assertThat(activeProducts).extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, SMARTPHONE_PRO_NAME);
 
         assertThat(inactiveProducts).hasSize(1);
-        assertThat(inactiveProducts.get(0).getName()).isEqualTo("Cotton T-Shirt");
+        assertThat(inactiveProducts.get(0).getName()).isEqualTo(COTTON_TSHIRT_NAME);
     }
 
     @Test
@@ -166,10 +171,10 @@ class ProductRepositoryTest {
         // Then
         assertThat(electronicsProducts).hasSize(2);
         assertThat(electronicsProducts).extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, SMARTPHONE_PRO_NAME);
 
         assertThat(clothingProducts).hasSize(1);
-        assertThat(clothingProducts.get(0).getName()).isEqualTo("Cotton T-Shirt");
+        assertThat(clothingProducts.get(0).getName()).isEqualTo(COTTON_TSHIRT_NAME);
     }
 
     @Test
@@ -183,7 +188,7 @@ class ProductRepositoryTest {
         // laptop: available=8 (10-2), threshold=5 -> low stock
         // tshirt: available=0, threshold=20 -> low stock
         assertThat(lowStockProducts).extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Cotton T-Shirt");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, COTTON_TSHIRT_NAME);
     }
 
     @Test
@@ -196,10 +201,10 @@ class ProductRepositoryTest {
 
         // Then
         assertThat(laptopResults).hasSize(1);
-        assertThat(laptopResults.get(0).getName()).isEqualTo("Gaming Laptop");
+        assertThat(laptopResults.get(0).getName()).isEqualTo(GAMING_LAPTOP_NAME);
 
         assertThat(phoneResults).hasSize(1);
-        assertThat(phoneResults.get(0).getName()).isEqualTo("Smartphone Pro");
+        assertThat(phoneResults.get(0).getName()).isEqualTo(SMARTPHONE_PRO_NAME);
 
         assertThat(emptyResults).isEmpty();
     }
@@ -230,7 +235,7 @@ class ProductRepositoryTest {
         // Then
         assertThat(inStockProducts).hasSize(2);
         assertThat(inStockProducts).extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, SMARTPHONE_PRO_NAME);
     }
 
     @Test
@@ -254,7 +259,7 @@ class ProductRepositoryTest {
 
         // Then
         assertThat(midRangeProducts).hasSize(1);
-        assertThat(midRangeProducts.get(0).getName()).isEqualTo("Smartphone Pro");
+        assertThat(midRangeProducts.get(0).getName()).isEqualTo(SMARTPHONE_PRO_NAME);
     }
 
     @Test
@@ -278,7 +283,7 @@ class ProductRepositoryTest {
         // Then
         assertThat(activeProducts).hasSize(2); // laptop and smartphone are active
         assertThat(activeProducts).extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, SMARTPHONE_PRO_NAME);
         assertThat(activeProducts).allMatch(p -> p.getStatus() == ProductStatus.ACTIVE);
     }
 
@@ -292,7 +297,7 @@ class ProductRepositoryTest {
         // Then
         assertThat(activeElectronics).hasSize(2);
         assertThat(activeElectronics).extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, SMARTPHONE_PRO_NAME);
 
         assertThat(activeClothing).isEmpty(); // tshirt is INACTIVE
     }
@@ -306,7 +311,7 @@ class ProductRepositoryTest {
 
         // Then
         assertThat(laptopProducts).hasSize(1);
-        assertThat(laptopProducts.get(0).getName()).isEqualTo("Gaming Laptop");
+        assertThat(laptopProducts.get(0).getName()).isEqualTo(GAMING_LAPTOP_NAME);
 
         assertThat(shirtProducts).isEmpty(); // tshirt is INACTIVE, won't be found
     }
@@ -322,7 +327,7 @@ class ProductRepositoryTest {
         assertThat(expensiveProducts).hasSize(2);
         assertThat(expensiveProducts)
                 .extracting(Product::getName)
-                .containsExactlyInAnyOrder("Gaming Laptop", "Smartphone Pro");
+                .containsExactlyInAnyOrder(GAMING_LAPTOP_NAME, SMARTPHONE_PRO_NAME);
         assertThat(expensiveProducts)
                 .allMatch(product -> product.getStatus() == ProductStatus.ACTIVE);
     }
