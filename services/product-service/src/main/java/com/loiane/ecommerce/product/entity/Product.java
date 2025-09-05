@@ -211,6 +211,10 @@ public class Product {
         return trackInventory;
     }
 
+    public boolean isTrackInventory() {
+        return Boolean.TRUE.equals(trackInventory);
+    }
+
     public void setTrackInventory(Boolean trackInventory) {
         this.trackInventory = trackInventory;
     }
