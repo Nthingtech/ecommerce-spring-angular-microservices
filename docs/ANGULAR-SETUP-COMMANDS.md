@@ -45,6 +45,17 @@ ng add @angular/material --project=products
 - Dependencies already installed (shared across workspace)
 - Updated: `projects/products/src/styles.scss`, `projects/products/src/index.html`
 
+## Micro-Frontend Setup
+
+### 6. Install Native Federation
+```bash
+# Install Angular Architects Native Federation for micro-frontend support
+npm i -D @angular-architects/native-federation
+```
+- Installed 47 packages for micro-frontend module federation
+- Enables dynamic loading of micro-frontends at runtime
+- Alternative to Webpack Module Federation with better Angular integration
+
 ## Project Structure
 
 After running these commands, the workspace structure includes:
