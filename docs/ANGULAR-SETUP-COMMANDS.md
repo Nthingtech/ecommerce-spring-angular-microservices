@@ -110,6 +110,21 @@ npm run start:shell
 npm run start:products
 ```
 
+### 11. Configure Federation Routing
+```bash
+# Update federation.manifest.json in shell
+# Update shell app.routes.ts with micro-frontend routing  
+# Configure products federation.config.js to expose routes
+# Create navigation components in both applications
+```
+
+**Files configured:**
+- `projects/shell/public/federation.manifest.json` - Updated to point to products on port 4201
+- `projects/shell/src/app/app.routes.ts` - Added lazy loading for products micro-frontend
+- `projects/products/federation.config.js` - Configured to expose routes instead of component
+- `projects/shell/src/app/app.html` - Added Material navigation toolbar
+- Created home component in shell and product-list component in products
+
 ## Project Structure
 
 After running these commands, the workspace structure includes:
