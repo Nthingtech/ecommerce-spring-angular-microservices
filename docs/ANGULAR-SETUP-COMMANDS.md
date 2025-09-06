@@ -67,6 +67,16 @@ ng g @angular-architects/native-federation:init --project shell --port 4200 --ty
 - Created: `projects/shell/src/bootstrap.ts`
 - Updated: `angular.json`, `package.json`, `projects/shell/src/main.ts`
 
+### 8. Configure Products as Remote Micro-frontend
+```bash
+# Configure the products project as a remote micro-frontend
+ng g @angular-architects/native-federation:init --project products --port 4201 --type remote
+```
+- Switched to esbuild application builder
+- Created: `projects/products/federation.config.js`
+- Created: `projects/products/src/bootstrap.ts`
+- Updated: `angular.json`, `projects/products/src/main.ts`
+
 ## Project Structure
 
 After running these commands, the workspace structure includes:

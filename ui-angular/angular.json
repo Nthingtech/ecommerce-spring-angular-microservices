@@ -128,6 +128,48 @@
 			"prefix": "app-products",
 			"architect": {
 				"build": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "products:esbuild:production"
+						},
+						"development": {
+							"target": "products:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "products:serve-original:development",
+						"rebuildDelay": 0,
+						"dev": true,
+						"port": 0
+					}
+				},
+				"extract-i18n": {
+					"builder": "@angular/build:extract-i18n"
+				},
+				"test": {
+					"builder": "@angular/build:karma",
+					"options": {
+						"tsConfig": "projects/products/tsconfig.spec.json",
+						"inlineStyleLanguage": "scss",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "projects/products/public"
+							}
+						],
+						"styles": [
+							"projects/products/src/styles.scss"
+						]
+					}
+				},
+				"esbuild": {
 					"builder": "@angular/build:application",
 					"options": {
 						"browser": "projects/products/src/main.ts",
@@ -141,6 +183,9 @@
 						],
 						"styles": [
 							"projects/products/src/styles.scss"
+						],
+						"polyfills": [
+							"es-module-shims"
 						]
 					},
 					"configurations": {
@@ -167,35 +212,19 @@
 					},
 					"defaultConfiguration": "production"
 				},
-				"serve": {
+				"serve-original": {
 					"builder": "@angular/build:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "products:build:production"
+							"buildTarget": "products:esbuild:production"
 						},
 						"development": {
-							"buildTarget": "products:build:development"
+							"buildTarget": "products:esbuild:development"
 						}
 					},
-					"defaultConfiguration": "development"
-				},
-				"extract-i18n": {
-					"builder": "@angular/build:extract-i18n"
-				},
-				"test": {
-					"builder": "@angular/build:karma",
+					"defaultConfiguration": "development",
 					"options": {
-						"tsConfig": "projects/products/tsconfig.spec.json",
-						"inlineStyleLanguage": "scss",
-						"assets": [
-							{
-								"glob": "**/*",
-								"input": "projects/products/public"
-							}
-						],
-						"styles": [
-							"projects/products/src/styles.scss"
-						]
+						"port": 4201
 					}
 				}
 			}
