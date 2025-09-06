@@ -56,6 +56,17 @@ npm i -D @angular-architects/native-federation
 - Enables dynamic loading of micro-frontends at runtime
 - Alternative to Webpack Module Federation with better Angular integration
 
+### 7. Configure Shell as Dynamic Host
+```bash
+# Configure the shell project as a dynamic host
+ng g @angular-architects/native-federation:init --project shell --port 4200 --type dynamic-host
+```
+- Switched to esbuild application builder
+- Created: `projects/shell/public/federation.manifest.json`
+- Created: `projects/shell/federation.config.js`
+- Created: `projects/shell/src/bootstrap.ts`
+- Updated: `angular.json`, `package.json`, `projects/shell/src/main.ts`
+
 ## Project Structure
 
 After running these commands, the workspace structure includes:
