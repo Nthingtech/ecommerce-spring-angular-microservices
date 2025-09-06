@@ -77,6 +77,39 @@ ng g @angular-architects/native-federation:init --project products --port 4201 -
 - Created: `projects/products/src/bootstrap.ts`
 - Updated: `angular.json`, `projects/products/src/main.ts`
 
+### 9. Install Concurrently for Multi-App Development
+```bash
+# Install concurrently to run multiple applications simultaneously
+npm install --save-dev concurrently
+```
+
+### 10. Add NPM Scripts for Development
+Added the following scripts to `package.json`:
+```json
+"start:shell": "ng serve shell --port 4200",
+"start:products": "ng serve products --port 4201",
+"start:all": "concurrently \"npm run start:shell\" \"npm run start:products\"",
+"build:shell": "ng build shell",
+"build:products": "ng build products",
+"build:all": "ng build shell && ng build products"
+```
+
+## Running the Applications
+
+### Start Both Applications Simultaneously
+```bash
+npm run start:all
+```
+
+### Start Applications Individually
+```bash
+# Shell (Host) - http://localhost:4200
+npm run start:shell
+
+# Products (Remote) - http://localhost:4201
+npm run start:products
+```
+
 ## Project Structure
 
 After running these commands, the workspace structure includes:
