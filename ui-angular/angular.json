@@ -111,7 +111,8 @@
 					},
 					"defaultConfiguration": "development",
 					"options": {
-						"port": 4200
+						"port": 4200,
+						"proxyConfig": "proxy.conf.js"
 					}
 				}
 			}
@@ -224,7 +225,8 @@
 					},
 					"defaultConfiguration": "development",
 					"options": {
-						"port": 4201
+						"port": 4201,
+						"proxyConfig": "proxy.conf.js"
 					}
 				}
 			}

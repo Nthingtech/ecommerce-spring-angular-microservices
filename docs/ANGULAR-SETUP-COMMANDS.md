@@ -125,6 +125,38 @@ npm run start:products
 - `projects/shell/src/app/app.html` - Added Material navigation toolbar
 - Created home component in shell and product-list component in products
 
+### 12. Configure API Proxy for Backend Integration
+```bash
+# Create shared proxy configuration file
+# Update angular.json to use shared proxy configuration
+```
+
+**Files created:**
+- `proxy.conf.js` - Shared proxy configuration for both micro-frontends
+- Updated `angular.json` serve-original configurations to use shared proxy
+
+**Proxy Configuration:**
+```javascript
+const PROXY_CONFIG = [
+  {
+    context: ["/api"],
+    target: "http://localhost:8080/",
+    secure: false,
+    logLevel: "debug",
+    changeOrigin: true
+  },
+];
+module.exports = PROXY_CONFIG;
+```
+
+**Benefits:**
+- ✅ Single shared proxy configuration (DRY principle)
+- ✅ All `/api/*` requests are proxied to Spring Boot backend
+- ✅ No CORS configuration needed in development
+- ✅ Clean API calls: just use `/api/products` instead of full URLs
+- ✅ Ready for Spring Gateway integration
+- ✅ Easier maintenance with one configuration file
+
 ## Project Structure
 
 After running these commands, the workspace structure includes:
